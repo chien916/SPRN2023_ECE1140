@@ -8,5 +8,6 @@
         <file>YhCarView.qml</file>
         <file>YhInterFont.ttf</file>
         <file>YhSpeedLimitAndSignal.qml</file>
+        <file>YhRailBlock.qml</file>
     </qresource>
 </RCC>

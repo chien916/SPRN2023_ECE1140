@@ -4,15 +4,15 @@ import QtQuick.Controls.Styles 1.4
 Item {
 	id:root
 	property string gaugeUnit_s: "mph"
-	property int maxValue_n: 200
+	property int maxValue_n: 100
 	property int minValue_n: 0
-	property int currValue_n: 100
+	property int currValue_n: 50
 	implicitHeight: 500
 	implicitWidth: 500
 	Rectangle{
 		id:rectangle_container
-		color: YhStyling.c_bgSub
-		radius: YhStyling.i_margin
+		color: YhStyling.cBgSub_c
+		radius: YhStyling.margin_r
 		anchors{
 			horizontalCenter: parent.horizontalCenter
 			verticalCenter: parent.verticalCenter
@@ -35,14 +35,14 @@ Item {
 							implicitWidth: outerRadius * 0.05
 							implicitHeight: outerRadius * 0.9
 							antialiasing: true
-							color: YhStyling.c_fgMain
+							color: YhStyling.cFgMain_c
 							radius: outerRadius * 0.05
 						}
 						foreground: Rectangle {
 								width: outerRadius * 0.2
 								height: width
 								radius: width / 2
-								color: YhStyling.c_fgMain
+								color: YhStyling.cFgMain_c
 								anchors.centerIn: parent
 							}
 						tickmark: Rectangle {
@@ -50,7 +50,7 @@ Item {
 							implicitWidth: outerRadius * 0.02
 							antialiasing: true
 							implicitHeight: outerRadius * 0.06
-							color: YhStyling.c_fgMain
+							color: YhStyling.cFgMain_c
 							radius: outerRadius * 0.02
 						}
 						minorTickmark: Rectangle {
@@ -58,14 +58,14 @@ Item {
 							implicitWidth: outerRadius * 0.01
 							antialiasing: true
 							implicitHeight: outerRadius * 0.03
-							color: YhStyling.c_fgMain
+							color: YhStyling.cFgMain_c
 							radius: outerRadius * 0.02
 						}
 						tickmarkLabel:  Text {
 							font.pixelSize: Math.max(6, outerRadius * 0.1)
 							font.family: "Inter"
 							text: styleData.value
-							color: YhStyling.c_fgSub
+							color: YhStyling.cFgSub_c
 							antialiasing: true
 						}
 					}
@@ -83,9 +83,9 @@ Item {
 				height:  item_ratioKeeper.width*0.1
 				text:"~~~"
 				font.family: "DSEG14 Classic"
-				font.pixelSize: YhStyling.i_fontMain
+				font.pixelSize: YhStyling.fontMain_r
 				fontSizeMode: Text.Fit
-				color: YhStyling.c_fgSub
+				color: YhStyling.cFgSub_c
 				horizontalAlignment: Text.AlignHCenter
 				verticalAlignment: Text.AlignVCenter
 				opacity: 0.15
@@ -99,11 +99,11 @@ Item {
 				height:  item_ratioKeeper.width*0.1
 				text:root.gaugeUnit_s
 				font.family: "Inter"
-				font.pixelSize: YhStyling.i_fontSub
+				font.pixelSize: YhStyling.fontSub_r
 				fontSizeMode: Text.Fit
 				horizontalAlignment: Text.AlignHCenter
 				verticalAlignment: Text.AlignVCenter
-				color: YhStyling.c_fgSub
+				color: YhStyling.cFgSub_c
 			}
 			Text{
 				id:text_digitalDisplayForeground
@@ -115,11 +115,11 @@ Item {
 				height: item_ratioKeeper.width*0.1
 				text:root.currValue_n.toString().padStart(3,"!").substring(0,3)
 				font.family: "DSEG14 Classic"
-				font.pixelSize: YhStyling.i_fontMain
+				font.pixelSize: YhStyling.fontMain_r
 				fontSizeMode: Text.Fit
 				horizontalAlignment: Text.AlignHCenter
 				verticalAlignment: Text.AlignVCenter
-				color: YhStyling.c_fgMain
+				color: YhStyling.cFgMain_c
 			}
 		}
 	}

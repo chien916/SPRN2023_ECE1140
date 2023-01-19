@@ -8,16 +8,19 @@ import QtQuick 2.12
 	QFontDatabase::addApplicationFont(":/YhSegFont.ttf");
 */
 Item {
-	property int minScreenPixel: 500
-	readonly property color c_bgMain: "#000000"
-	readonly property color c_bgSub: "#262626"
-	readonly property color c_fgMain: "#ffffff"
-	readonly property color c_fgSub: "#a6a6a6"
-	readonly property color c_yellow: "#E8D19D"
-	readonly property color c_red: "#EB9091"
-	readonly property color c_blue: "#BFD3E4"
-	readonly property color c_green: "#C9CDB3"
-	readonly property int i_margin: minScreenPixel*0.1
-	readonly property int i_fontMain: minScreenPixel*0.1
-	readonly property int i_fontSub: minScreenPixel*0.05
+	property real minScreenPixel_r: 500
+	readonly property color cBgMain_c: "#000000"
+	readonly property color cBgSub_c: "#212121"
+	readonly property color cFgMain_c: "#ffffff"
+	readonly property color cFgSub_c: "#a6a6a6"
+	readonly property color cFgSubSub_c: "#3c3c3c"
+	readonly property color cYellow_c: "#ffff00"
+	readonly property color cRed_c: "#ff0000"
+	readonly property color cBlue_c: "#78d7ec"
+	readonly property color cGreen_c: "#00ff00"
+	readonly property real margin_r: minScreenPixel_r*0.05
+	readonly property real spacing_r:margin_r*0.2
+	readonly property real lineWidth_r:margin_r*0.1
+	readonly property real fontMain_r: minScreenPixel_r*0.1
+	readonly property real fontSub_r: minScreenPixel_r*0.05
 }

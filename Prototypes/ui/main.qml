@@ -8,7 +8,7 @@ Window {
 	title: qsTr("Hello World")
 	Rectangle{
 		anchors.fill: parent
-		color: YhStyling.c_bgMain
+		color: YhStyling.cBgMain_c
 		YhCircularGauge{
 			id:g
 			height: parent.height*0.5
@@ -23,58 +23,58 @@ Window {
 			anchors.fill: parent
 			anchors.margins: 10
 			Rectangle{
-				color: YhStyling.c_bgSub
+				color: YhStyling.cBgSub_c
 				height:15
 				width: 100
 				Text{
 					text: "regular"
 					anchors.fill: parent
 					font.family: "Inter"
-					color: YhStyling.c_fgMain
+					color: YhStyling.cFgMain_c
 				}
 			}
 			Rectangle{
-				color: YhStyling.c_red
+				color: YhStyling.cRed_c
 				height:15
 				width: 100
 				Text{
 					text: "primary"
 					anchors.fill: parent
 					font.family: "Space Grotesk"
-					color: YhStyling.c_bgMain
+					color: YhStyling.cBgMain_c
 				}
 			}
 			Rectangle{
-				color: YhStyling.c_yellow
+				color: YhStyling.cYellow_c
 				height:15
 				width: 100
 				Text{
 					text: "primary"
 					anchors.fill: parent
 					font.family: "DSEG14 Classic"
-					color: YhStyling.c_bgMain
+					color: YhStyling.cBgMain_c
 				}
 			}
 			Rectangle{
-				color: YhStyling.c_blue
+				color: YhStyling.cBlue_c
 				height:15
 				width: 100
 				Text{
 					text: "primary"
 					anchors.fill: parent
 					font.family: "DSEG14 Classic"
-					color: YhStyling.c_bgMain
+					color: YhStyling.cBgMain_c
 				}
 			}
 			Rectangle{
-				color: YhStyling.c_green
+				color: YhStyling.cGreen_c
 				height:15
 				width: 100
 				Text{
 					text: "primary"
 					anchors.fill: parent
 					font.family: "DSEG14 Classic"
-					color: YhStyling.c_bgMain
+					color: YhStyling.cBgMain_c
 				}
 			}
 

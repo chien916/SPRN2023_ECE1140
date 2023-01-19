@@ -173,6 +173,7 @@ release\qrc_qml.cpp: ..\..\..\Prototypes\ui\qml.qrc \
 		..\..\..\Prototypes\ui\YhStyling.qml \
 		..\..\..\Prototypes\ui\qmldir \
 		..\..\..\Prototypes\ui\YhSpeedLimitAndSignal.qml \
+		..\..\..\Prototypes\ui\YhRailBlock.qml \
 		..\..\..\Prototypes\ui\main.qml
 	C:\Qt\5.15.2\msvc2019_64\bin\rcc.exe -name qml ..\..\..\Prototypes\ui\qml.qrc -o release\qrc_qml.cpp
 
