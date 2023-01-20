@@ -9,5 +9,6 @@
         <file>YhInterFont.ttf</file>
         <file>YhSpeedLimitAndSignal.qml</file>
         <file>YhRailBlock.qml</file>
+        <file>YhRailMap.qml</file>
     </qresource>
 </RCC>

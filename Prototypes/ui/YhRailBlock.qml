@@ -2,14 +2,19 @@ import QtQuick 2.12
 
 Item {
 	id:root
-	property bool ld_b: false
+	property bool ld_b: true
 	property bool rd_b: true
 	property bool sUp_b: false
-	property string stationName_s : ""
-	property string trainId_s :"1"
-	property real trainAtPerc_r: 0.4
+	property bool fwd_b:true
+	property bool bwd_b:true
+	property string fwdLight_s:"approach"
+	property string bwdLight_s:"clear"
+	property string stationInfo_s : ""
+	property string trainId_s :"1234"
+	property real trainAtPerc_r: 0.2
+	property color color_c:YhStyling.cBlue_c
+
 	Behavior on trainAtPerc_r{NumberAnimation{}}
-	property color color_c:YhStyling.cRed_c
 	Behavior on color_c{PropertyAnimation{
 			easing.type: Easing.InOutQuad
 			duration:  1000}
@@ -157,15 +162,104 @@ Item {
 				text:trainId_s
 			}
 		}
+
+		Rectangle{
+			id:rect_station
+			x:rect_canvas.h_r
+			width: rect_canvas.width-2*x
+			y:rect_canvas.ytop_r+rect_canvas.h_r+rect_canvas.h_r
+			height: (rect_canvas.ybottom_r-rect_canvas.ytop_r)/8
+			radius: rect_canvas.h_r
+			color: YhStyling.cFgSubSub_c
+			opacity: stationInfo_s===""?0:1
+			Text{
+				text:stationInfo_s
+				color: YhStyling.cBgSub_c
+				anchors.fill: parent
+				anchors.margins: YhStyling.lineWidth_r
+				font.family: "Inter"
+				font.pixelSize: YhStyling.fontSub_r
+				fontSizeMode: Text.Fit
+				horizontalAlignment: Text.AlignHCenter
+				verticalAlignment: Text.AlignVCenter
+
+			}
+
+		}
+
+
+		Rectangle{
+			id:rect_arrows
+			width: rect_station.width
+			height: rect_station.height
+			color: "transparent"
+			x:rect_station.x
+			y:rect_station.y*2+YhStyling.spacing_r
+			Item{
+				height: rect_arrows.height
+				width: height
+				Text{
+					anchors.fill: parent
+					text:"←"
+					font.family: "Inter"
+					font.pixelSize: YhStyling.fontMain_r
+					fontSizeMode: Text.Fit
+					horizontalAlignment: Text.AlignLeft
+					verticalAlignment: Tet.AlignVCenter
+					color: {
+						if(root.bwdLight_s==="clear")
+							return YhStyling.cGreen_c
+						else if(root.bwdLight_s==="approach")
+							return YhStyling.cYellow_c
+						else if(root.bwdLight_s==="stop")
+							return YhStyling.cRed_c
+						else
+							return YhStyling.cFgSubSub_c
+					}
+					Behavior on color {PropertyAnimation { easing.type: Easing.InOutQuad }}
+				}
+				rotation: (!root.sUp_b&&root.ld_b)?-rect_canvas.alpha_r:0
+				Behavior on rotation {SpringAnimation { spring: 2; damping: 1 }}
+			}
+			Item{
+				height: rect_arrows.height
+				width: height
+				x:rect_arrows.width-width
+				Text{
+					anchors.fill: parent
+					text:"→"
+					font.family: "Inter"
+					font.pixelSize: YhStyling.fontMain_r
+					fontSizeMode: Text.Fit
+					horizontalAlignment: Text.AlignRight
+					verticalAlignment: Text.AlignVCenter
+					color: {
+						if(root.fwdLight_s==="clear")
+							return YhStyling.cGreen_c
+						else if(root.fwdLight_s==="approach")
+							return YhStyling.cYellow_c
+						else if(root.fwdLight_s==="stop")
+							return YhStyling.cRed_c
+						else
+							return YhStyling.cFgSubSub_c
+					}
+					Behavior on color {PropertyAnimation { easing.type: Easing.InOutQuad }}
+				}
+				rotation: (!root.sUp_b&&root.rd_b)?rect_canvas.alpha_r:0
+				Behavior on rotation {SpringAnimation { spring: 2; damping: 1 }}
+			}
+		}
 	}
-//for testing only
+
+	//for testing only
 	implicitHeight: 376
 	implicitWidth: 500
 	MouseArea{
 		anchors.fill: parent
 		onClicked: {
-			if(trainAtPerc_r<=0.9) trainAtPerc_r+=0.1
-			else trainAtPerc_r=0
+			//			if(trainAtPerc_r<=0.9) trainAtPerc_r+=0.1
+			//			else trainAtPerc_r=0
+			sUp_b = !sUp_b
 		}
 	}
 }

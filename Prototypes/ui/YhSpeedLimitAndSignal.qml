@@ -3,9 +3,9 @@ import QtQuick 2.12
 Item {
 	id:root
 
-	property int currSpeedLimit_i: 30
+	property int currSpeedLimit_i:60
 	//"clear"|"approach"|"stop"
-	property string currSignal_s: "approach"
+	property string currSignal_s: "stop"
 
 	readonly property variant speedLimitIntervals_iA: [80,70,65,60,55,45,40,30,20,15]
 	readonly property int roundedSpeedLimit_i:{
