@@ -1,0 +1,15 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>T3Styling.qml</file>
+        <file>qmldir</file>
+        <file>T3CircularGauge.qml</file>
+        <file>T3SegFont.ttf</file>
+        <file>T3CarView.qml</file>
+        <file>T3InterFont.ttf</file>
+        <file>T3SpeedLimitAndSignal.qml</file>
+        <file>T3RailBlock.qml</file>
+        <file>T3RailMap.qml</file>
+        <file>T3PidScope.qml</file>
+    </qresource>
+</RCC>
