@@ -7,7 +7,7 @@
  * V_cmd -> r(t)
  * V_err -> e(t)
  * P -> u(t)
- *
+ *5
  */
 class T3PidController {
   private:
@@ -26,7 +26,7 @@ class T3PidController {
 	float iterate();
 };
 
-inline T3PidController::T3PidController(float (*plant)(float)) {
+inline T3PidController::T3PidController( float (*plant)(float)) {
 	this->plant = plant;
 }
 
