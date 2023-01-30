@@ -24,7 +24,7 @@ HEADERS += \
 	t3ctcoffice.hpp \
 	t3pidcontroller.h \
 	t3trackcontroller.hpp \
-	t3tracklistmodel.hpp \
+	t3trackdatabase.hpp \
 	t3trackmodel.hpp \
 	t3traincontroller.hpp \
 	t3trainlistmodel.hpp \

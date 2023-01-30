@@ -5,6 +5,7 @@
 #include <QtQml>
 #include <QtWidgets>
 #include "t3traincontroller.hpp"
+#include "t3trackdatabase.hpp"
 int main(int argc, char *argv[]) {
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 	QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
@@ -21,6 +22,9 @@ int main(int argc, char *argv[]) {
 
 	T3TrainController testTrainController;
 	engine.rootContext()->setContextProperty("testTrainController", &testTrainController);
+
+	T3TrackDatabase testTrackDatabase;
+	engine.rootContext()->setContextProperty("testTrackDatabase", &testTrackDatabase);
 
 	engine.load(url);
 

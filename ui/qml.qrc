@@ -11,5 +11,9 @@
         <file>T3RailBlock.qml</file>
         <file>T3RailMap.qml</file>
         <file>T3PidScope.qml</file>
+        <file>T3TestingOnly.qml</file>
+        <file>T3GridSolver.js</file>
+        <file>T3CTCOffice.qml</file>
+        <file>T3CTCLineGrid.qml</file>
     </qresource>
 </RCC>

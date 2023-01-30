@@ -65,10 +65,10 @@ inline T3TrainController::T3TrainController(QObject *parent) : QObject(parent) {
 	pidController.integralOn = true;
 	pidController.derivativeOn = true;
 	pidController.r  = 1000;
-	pidController.kp = 0.001;
-	pidController.ki = 0.05;
-	pidController.kd = 0.01;
-	pidController.dt = 0.1;
+	pidController.kp = 0.001f;
+	pidController.ki = 0.05f;
+	pidController.kd = 0.01f;
+	pidController.dt = 0.1f;
 
 
 
@@ -79,6 +79,7 @@ inline void T3TrainController::post(const QString request) {
 }
 
 inline void T3TrainController::timerEvent(QTimerEvent *event) {
+	Q_UNUSED(event)
 	float newT = tbuffer.empty() ? 0 : tbuffer.last() + pidController.dt;
 	float newY = pidController.iterate();
 	if(ybuffer.length() >= 100) {

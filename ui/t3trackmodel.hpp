@@ -5,7 +5,7 @@
 #include "t3trainmodel.hpp"
 #include "t3trackcontroller.hpp"
 class T3TrackModel {
-  public:
+  private:
 	//identifications of track block
 	QString blockId = "";//constants after initialization
 
@@ -15,9 +15,9 @@ class T3TrackModel {
 	float length = 0.0;
 	uint16_t speedLimit = 0;
 	//towardsBlock in 3.4 as direction of travel
-	QString crossing;
-	QString heaters;
-	QString beacons;
+	QString crossing;//""|"up"|"down"
+	QString heaters;//undefined
+	QString beacons;//undefined
 	bool isUnderground = false;
 
 	//3.2 - Ticket Sales (People waiting at stations)
@@ -41,8 +41,8 @@ class T3TrackModel {
 
 	//3.8 - Switch positions and light states displayed
 	QString light = "";//"clear"|"approach"|"stop"
-	QString prevBlocks;//"B_A_12,B_C_35"
-	QString nextBlocks;//"B_A_13"
+	QString prevBlocks;//"B_A_12,B_C_35" use comma as delimiter
+	QString nextBlocks;//"B_A_13" use comma as delimiter
 	QString currPrevBlock;
 	QString currNextBlock;
 
@@ -51,6 +51,8 @@ class T3TrackModel {
 
 	//Extras - programmable logics controller
 	QJSValue plcFunction;
+
+  public:
 
 
 };
