@@ -42,8 +42,8 @@ class T3TrackDatabase: public QObject {
 	//Context variables exposed to QML:
 	Q_PROPERTY(QJsonArray lineConstantsObjects_QML MEMBER lineConstantsObjects NOTIFY onLineConstantsObjectsChanged)
 	Q_PROPERTY(QJsonArray lineVariablesObjects_QML MEMBER lineVariablesObjects NOTIFY onLineVariablesObjectsChanged)
-	QJsonArray lineConstantsObjects;//do not modify directly after initialization. use the put() slot instead!
-	QJsonArray lineVariablesObjects;//do not modify directly after initialization. use the put() slot instead!
+	QJsonArray lineConstantsObjects;//do not modify directly after initialization. use the setTrackProperty() slot instead!
+	QJsonArray lineVariablesObjects;//do not modify directly after initialization. use the setTrackProperty() slot instead!
   Q_SIGNALS:
 	void onLineConstantsObjectsChanged();
 	void onLineVariablesObjectsChanged();
@@ -53,12 +53,13 @@ class T3TrackDatabase: public QObject {
 		CommandedSpeed = 0 //real/float
 		, Authority = 1 //bool
 		, SwitchPostion = 2 //bool
-		, Light = 3 //string
-		, CrossingPosition = 4 //bool
-		, TrainOnBlock = 5 //string
-		, Failure = 6 //string
-		, Heaters = 7 //string
-		, PeopleOnStation = 8 //int
+		, ForwardLight = 3 //string
+		, ReversedLight = 4 // string
+		, CrossingPosition = 5//bool
+		, TrainOnBlock = 6 //string
+		, Failure = 7 //string
+		, Heaters = 8 //string
+		, PeopleOnStation = 9 //int
 	};
 	Q_ENUM(TrackProperty);
   private:
@@ -67,29 +68,31 @@ class T3TrackDatabase: public QObject {
 		std::make_pair(T3TrackDatabase::TrackProperty::CommandedSpeed, QPair<QString, int>(QString("commandedSpeed"), qMetaTypeId<float>()))
 		, std::make_pair(T3TrackDatabase::TrackProperty::Authority, QPair<QString, int>(QString("authority"), qMetaTypeId<bool>()))
 		, std::make_pair(T3TrackDatabase::TrackProperty::SwitchPostion, QPair<QString, int>(QString("switchPosition"), qMetaTypeId<bool>()))
-		, std::make_pair(T3TrackDatabase::TrackProperty::Light, QPair<QString, int>(QString("light"), qMetaTypeId<QString>()))
+		, std::make_pair(T3TrackDatabase::TrackProperty::ForwardLight, QPair<QString, int>(QString("forwardLight"), qMetaTypeId<QString>()))
+		, std::make_pair(T3TrackDatabase::TrackProperty::ReversedLight, QPair<QString, int>(QString("backwardLight"), qMetaTypeId<QString>()))
 		, std::make_pair(T3TrackDatabase::TrackProperty::CrossingPosition, QPair<QString, int>(QString("crossingPosition"), qMetaTypeId<bool>()))
 		, std::make_pair(T3TrackDatabase::TrackProperty::TrainOnBlock, QPair<QString, int>(QString("trainOnBlock"), qMetaTypeId<QString>()))
 		, std::make_pair(T3TrackDatabase::TrackProperty::Failure, QPair<QString, int>(QString("failure"), qMetaTypeId<QString>()))
 		, std::make_pair(T3TrackDatabase::TrackProperty::Heaters, QPair<QString, int>(QString("heaters"), qMetaTypeId<QString>()))
 		, std::make_pair(T3TrackDatabase::TrackProperty::PeopleOnStation, QPair<QString, int>(QString("peopleOnStation"), qMetaTypeId<uint16_t>()))
 	};
-  public Q_SLOTS:
-	void put(QString blockId, T3TrackDatabase::TrackProperty trackProperty, QVariant value);
-	void get(const QString request, QVariant* respond);
+//  public Q_SLOTS:
+  public:
+	void setTrackProperty(QString blockId, T3TrackDatabase::TrackProperty trackProperty, QVariant value);
+	QVariant getTrackProperty(QString blockId, T3TrackDatabase::TrackProperty trackProperty);
 	void import(const QString filePath);
 };
 
 /**
- * @brief T3TrackDatabase::put
+ * @brief T3TrackDatabase::setTrackProperty
  * @param request
  * Patch variables with certain values
  *
  */
-inline void T3TrackDatabase::put(QString blockId, T3TrackDatabase::TrackProperty trackProperty, QVariant value) {
+inline void T3TrackDatabase::setTrackProperty(QString blockId, T3TrackDatabase::TrackProperty trackProperty, QVariant value) {
 	QPair<QString, int> metaData = trackPropertiesMetaDataMap.value(trackProperty);
 	if(!value.canConvert(metaData.second))
-		qFatal("T3TrackDatabase::put() -> property value required and inputted format doesn't match");
+		qFatal("T3TrackDatabase::setTrackProperty() -> property value required and insetTrackPropertyted format doesn't match");
 	value.convert(metaData.second);
 	bool fieldIsFound = false;
 	for(qsizetype i = 0; i < lineVariablesObjects.size(); ++i) { //for every line
@@ -104,12 +107,25 @@ inline void T3TrackDatabase::put(QString blockId, T3TrackDatabase::TrackProperty
 		}
 	}
 	if(!fieldIsFound)
-		qFatal("T3TrackDatabase::put() -> cannot find the block id inputted");
+		qFatal("T3TrackDatabase::setTrackProperty() -> cannot find the block id insetTrackPropertyted");
 	Q_EMIT onLineVariablesObjectsChanged();
 }
 
-inline void T3TrackDatabase::get(const QString request, QVariant *respond) {
-	//TO-DO
+inline QVariant T3TrackDatabase::getTrackProperty(QString blockId, TrackProperty trackProperty) {
+	QPair<QString, int> metaData = trackPropertiesMetaDataMap.value(trackProperty);
+	for(qsizetype i = 0; i < lineVariablesObjects.size(); ++i) { //for every line
+		QJsonObject currLineVariablesObject = lineVariablesObjects[i].toObject();
+		if(currLineVariablesObject.find(blockId) != currLineVariablesObject.end()) {
+			QJsonObject currBlockVariablesObject = currLineVariablesObject[blockId].toObject();
+			QVariant valueRequested = currBlockVariablesObject[metaData.first].toVariant();
+			if(valueRequested.convert(metaData.second))
+				return valueRequested;
+			else
+				qFatal("T3TrackDatabase::getTrackProperty() -> cannot convert value to the right type");
+		}
+	}
+	qFatal("T3TrackDatabase::getTrackProperty() -> cannot find the block id insetTrackPropertyted");
+	return QVariant();//should not reach this step..
 }
 
 inline void T3TrackDatabase::import(const QString filePath) {
@@ -200,7 +216,16 @@ inline void T3TrackDatabase::import(const QString filePath) {
 			currBlockVariablesObject.insert("commandedSpeed", static_cast<uint16_t>(0));
 			currBlockVariablesObject.insert("authority", false);
 			currBlockVariablesObject.insert("switchPosition", false);
-			currBlockVariablesObject.insert("light", QString("clear"));
+			if(currLineSplitted.at(12).contains("BIDIRECTIONAL")
+					|| currLineSplitted.at(12).contains("FORWARD"))
+				currBlockVariablesObject.insert("forwardLight", QString("clear"));
+			else
+				currBlockVariablesObject.insert("forwardLight", QString(""));
+			if(currLineSplitted.at(12).contains("BIDIRECTIONAL")
+					|| currLineSplitted.at(12).contains("REVERSED"))
+				currBlockVariablesObject.insert("reversedLight", QString("clear"));
+			else
+				currBlockVariablesObject.insert("reversedLight", QString(""));
 			if(currLineSplitted.at(10) == "TRUE")
 				currBlockVariablesObject.insert("crossingPosition", false);
 			else
@@ -242,8 +267,8 @@ inline T3TrackDatabase::T3TrackDatabase(QObject * parent) : QObject(parent) {
 
 	//	//TESTING FOR RAIL LOADING
 	import("C:/Users/YIQ25/Documents/Academics/ECE1140/Resources/T3RedLine.csv");
-//	put("R_A_1", TrackProperty::TrainOnBlock, "1234");
-//	put("R_A_1", TrackProperty::PeopleOnStation, "1234");
+//	setTrackProperty("R_A_1", TrackProperty::TrainOnBlock, "1234");
+//	setTrackProperty("R_A_1", TrackProperty::PeopleOnStation, "1234");
 	import("C:/Users/YIQ25/Documents/Academics/ECE1140/Resources/T3GreenLine.csv");
 	import("C:/Users/YIQ25/Documents/Academics/ECE1140/Resources/T3BlueLine.csv");
 }

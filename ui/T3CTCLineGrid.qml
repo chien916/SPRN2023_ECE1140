@@ -162,7 +162,7 @@ Item {
 							else
 								return ""
 						}
-						color_c: {
+						color_c: {//probably needs change
 							let failure_b = lineVariablesObject_O[blockId_s]["failure"];
 							let authority_b = lineVariablesObject_O[blockId_s]["authority"];
 							if(failure_b)
@@ -179,7 +179,7 @@ Item {
 						fwdInfo_s: {
 							let direction_s = lineConstantsObject_O["blocksMap"][blockId_s]["direction"];
 							if(direction_s==="BIDIRECTIONAL"||direction_s==="FORWARD"){
-								lineVariablesObject_O[blockId_s]["light"]//needs change!
+								lineVariablesObject_O[blockId_s]["forwardLight"]
 							}else{
 								return ""
 							}
@@ -187,11 +187,13 @@ Item {
 						bwdInfo_s: {
 							let direction_s = lineConstantsObject_O["blocksMap"][blockId_s]["direction"];
 							if(direction_s==="BIDIRECTIONAL"||direction_s==="REVERSED"){
-								lineVariablesObject_O[blockId_s]["light"]
+								lineVariablesObject_O[blockId_s]["reversedLight"]
 							}else{
 								return ""
 							}
 						}
+//						trainInfo_s: lineVariablesObject_O[blockId_s]["trainOnBlock"].replace("r","")
+						trainMoveForward_b:!lineVariablesObject_O[blockId_s]["trainOnBlock"].includes("r")
 						x:unitWidth_r*coordinates_A/*[lineObjIndex_i]*/[index][1][1]+rect_leftConnectorCanvas.width
 						y:coordinates_A/*[lineObjIndex_i]*/[index][1][0]*(height-adaptiveMargin_r)
 						//						opacity: y===0?1:0

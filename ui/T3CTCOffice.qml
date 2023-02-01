@@ -3,7 +3,7 @@ import QtGraphicalEffects 1.12
 import QtQuick.Dialogs 1.3
 Item {
 	id:root
-	implicitHeight: 720
+	implicitHeight: 1024
 	implicitWidth: 1280
 	property int lineCount_i:0
 	readonly property variant trackDatabase_O:testTrackDatabase
@@ -32,10 +32,9 @@ Item {
 			Repeater{
 				model:3
 				delegate:T3CTCLineGrid{
-					lineConstantsObject_O: lineConstantsObjects_OA[3-index-1]
-					lineVariablesObject_O: lineVariablesObjects_OA[3-index-1]
-					coordinates_A: coordinates_nA[3-index-1]
-//					lin
+					lineConstantsObject_O: lineConstantsObjects_OA[index]
+					lineVariablesObject_O: lineVariablesObjects_OA[index]
+					coordinates_A: coordinates_nA[index]
 				}
 			}
 		}
@@ -48,7 +47,7 @@ Item {
 				id:mAre_selectLineFileButton
 				anchors.fill: parent
 				onClicked: {
-					trackDatabase_O.put("R_A_1",5, "1234")
+					trackDatabase_O.put("R_A_1",6, "1234r")
 				}
 					/*fDia_selectLineFileDialog.open()*/
 			}
