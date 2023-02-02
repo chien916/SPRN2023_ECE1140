@@ -6,7 +6,12 @@ Window {
 	height: 480
 	visible: true
 	title: qsTr("Hello World")
-	Text{
-		text:"et"
+	visibility: "FullScreen"
+	Rectangle{
+		color: T3Styling.cBgSub_c
+		anchors.fill: parent
+	}
+	T3CTC{
+		anchors.fill: parent
 	}
 }

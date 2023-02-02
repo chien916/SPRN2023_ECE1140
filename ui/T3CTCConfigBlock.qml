@@ -1,7 +1,8 @@
 import QtQuick 2.12
 
 Item {
-
+	signal cancelClicked();
+	signal applyClicked();
 	readonly property variant configModel_nA:[
 		//fieldId, displayName, twoStates, textOnly
 		["maintain","maintainance mode",true]
@@ -97,6 +98,7 @@ Item {
 			height: T3Styling.margin_r
 			width: (rect_canvas.width-T3Styling.margin_r*3)/2
 			buttonLabel_s: "APPLY"
+			onButtonClicked: applyClicked()
 		}
 
 		T3Button{
@@ -109,6 +111,7 @@ Item {
 			height: T3Styling.margin_r
 			width: (rect_canvas.width-T3Styling.margin_r*3)/2
 			buttonLabel_s: "CANCEL"
+			onButtonClicked: cancelClicked()
 		}
 	}
 

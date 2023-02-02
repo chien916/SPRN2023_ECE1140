@@ -10,6 +10,7 @@ Item {
 	property variant lineConstantsObject_O: null
 	property variant lineVariablesObject_O: null
 	property variant coordinates_A: []
+	signal blockClicked(blockId:string)
 	Rectangle{
 		id:rect_canvas
 		property real numberOfUnitWidthNeeded_r: Math.max(...coordinates_A.map(it=>it[1][1]))+1
@@ -215,6 +216,7 @@ Item {
 							id:mAre_railBlock
 							hoverEnabled: true
 							anchors.fill: parent
+							onClicked: blockClicked(coordinates_A[index][0])
 						}
 					}
 

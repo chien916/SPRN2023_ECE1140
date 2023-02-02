@@ -4,7 +4,7 @@ Item {
 	implicitHeight: 100
 	implicitWidth: 200
 	property string buttonLabel_s :"buttonText"
-	signal onButtonClicked()
+	signal buttonClicked()
 	Rectangle{
 		id:rect_buttonBackground
 		color:{
@@ -37,7 +37,7 @@ Item {
 		id:mAre_mouseArea
 		hoverEnabled: true
 		anchors.fill: rect_buttonBackground
-		onClicked: onButtonClicked()
+		onClicked: buttonClicked()
 	}
 
 }

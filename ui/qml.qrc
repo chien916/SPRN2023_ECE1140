@@ -14,5 +14,6 @@
         <file>T3CTCConfigBlock.qml</file>
         <file>T3ParamConfigUnit.qml</file>
         <file>T3Button.qml</file>
+        <file>T3CTCMainMenu.qml</file>
     </qresource>
 </RCC>

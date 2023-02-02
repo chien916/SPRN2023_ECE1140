@@ -5,7 +5,7 @@ Item {
 	property bool hovered_b:false
 	property bool pressed_b:false
 	//block identifier
-	property string blockId_s:"B_R_35"
+	property string blockId_s:"B_R_24"
 	//switch information
 	property bool ld_b: false
 	property bool rd_b: true
@@ -16,8 +16,8 @@ Item {
 	//infrastructure information
 	property string stationInfo_s : ""
 	property string crossingInfo_s: ""
-	property bool isUndg_b: true
-	//current train on block information
+	property bool isUndg_b: false
+	//current train on block infor1mation
 	property string trainInfo_s :"1"
 	property bool trainMoveForward_b: true
 	//current status of block represented by color information
