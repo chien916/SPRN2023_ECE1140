@@ -3,17 +3,16 @@
         <file>main.qml</file>
         <file>T3Styling.qml</file>
         <file>qmldir</file>
-        <file>T3CircularGauge.qml</file>
+        <file>T3NMCircularGauge.qml</file>
         <file>T3SegFont.ttf</file>
-        <file>T3CarView.qml</file>
+        <file>T3NMCarView.qml</file>
         <file>T3InterFont.ttf</file>
-        <file>T3SpeedLimitAndSignal.qml</file>
-        <file>T3RailBlock.qml</file>
-        <file>T3RailMap.qml</file>
-        <file>T3PidScope.qml</file>
-        <file>T3TestingOnly.qml</file>
-        <file>T3GridSolver.js</file>
-        <file>T3CTCOffice.qml</file>
+        <file>T3NMSpeedLimitAndSignal.qml</file>
+        <file>T3CTCRailBlock.qml</file>
+        <file>T3CTC.qml</file>
         <file>T3CTCLineGrid.qml</file>
+        <file>T3CTCConfigBlock.qml</file>
+        <file>T3ParamConfigUnit.qml</file>
+        <file>T3Button.qml</file>
     </qresource>
 </RCC>

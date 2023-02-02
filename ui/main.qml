@@ -9,5 +9,4 @@ Window {
 	Text{
 		text:"et"
 	}
-	T3CTCOffice{}
 }

@@ -5,7 +5,7 @@
 #include <QtQml>
 #include <QtWidgets>
 #include "t3traincontroller.hpp"
-#include "t3trackdatabase.hpp"
+#include "t3database.hpp"
 int main(int argc, char *argv[]) {
 #if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
 	QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
@@ -20,16 +20,13 @@ int main(int argc, char *argv[]) {
 			QCoreApplication::exit(-1);
 	}, Qt::QueuedConnection);
 
-	T3TrainController testTrainController;
-	engine.rootContext()->setContextProperty("testTrainController", &testTrainController);
-
-	T3TrackDatabase testTrackDatabase;
-	engine.rootContext()->setContextProperty("testTrackDatabase", &testTrackDatabase);
+	T3Database t3database;
+	engine.rootContext()->setContextProperty("t3databaseQml", &t3database);
 
 	engine.load(url);
 
 
-	testTrainController.startTimer(100);
+//	testTrainController.startTimer(100);
 
 	QFontDatabase::addApplicationFont(":/T3InterFont.ttf");
 	QFontDatabase::addApplicationFont(":/T3SegFont.ttf");

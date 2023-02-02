@@ -1,9 +1,22 @@
 #ifndef T3TRAINCONTROLLER_H
 #define T3TRAINCONTROLLER_H
 #include <QtCore>
-#include "t3pidcontroller.h"
 class T3TrainController: public QObject {
 	Q_OBJECT
+
+  private:
+	//Speed regulation module
+	struct PidController {
+	  private:
+		float plant(float);
+		float prev_e{0.0}, prev_y{0.0}, sum_e{0.0};
+	  public:
+		float dt{0.0};
+		float r;//desired setpoint
+		float ki{0.0}, kp{0.0}, kd{0.0};
+		bool integralOn{false}, propotionalOn{false}, derivativeOn{false};
+		float iterate();
+	} pidController;
 
 	//Views
 	Q_PROPERTY(QList<float> rbuffer_q MEMBER rbuffer NOTIFY onrybufferChanged)
@@ -26,9 +39,7 @@ class T3TrainController: public QObject {
 	float testPlant(float input) {
 		return input;
 	};
-	T3PidController pidController = T3PidController([](float inp) {
-		return inp;
-	});;
+
 //	//4.1 Train does not exceed authority or speed limit
 //	//4.2 Emergency Brake Activation by Driver
 //	//4.3 Service Brake by Driver
@@ -57,7 +68,22 @@ class T3TrainController: public QObject {
 	void timerEvent(QTimerEvent *event) Q_DECL_OVERRIDE;
 };
 
+inline float T3TrainController::PidController::plant(float) {
 
+}
+
+inline float T3TrainController::PidController::iterate() {
+	float curr_e = r - prev_y;
+	float P = kp * curr_e;
+	float I = ki * sum_e * dt;
+	float D = kd * (prev_e + curr_e) * dt * 0.5;//trapozoidal integration
+	float u = (propotionalOn ? P : 0.0) + (integralOn ? I : 0.0) + (derivativeOn ? D : 0.0);
+	float y = plant(u);
+	prev_y = y;
+	prev_e = curr_e;
+	sum_e += curr_e;
+	return y;
+}
 
 inline T3TrainController::T3TrainController(QObject *parent) : QObject(parent) {
 	//testing only
@@ -69,9 +95,6 @@ inline T3TrainController::T3TrainController(QObject *parent) : QObject(parent) {
 	pidController.ki = 0.05f;
 	pidController.kd = 0.01f;
 	pidController.dt = 0.1f;
-
-
-
 }
 
 inline void T3TrainController::post(const QString request) {

@@ -13,7 +13,7 @@ Item {
 	Rectangle{
 		id:rect_canvas
 		property real numberOfUnitWidthNeeded_r: Math.max(...coordinates_A.map(it=>it[1][1]))+1
-		color: T3Styling.cBgSub_c
+		color: T3Styling.cBgMain_c
 		anchors{
 			fill:parent
 		}
@@ -44,13 +44,20 @@ Item {
 			anchors.fill: parent
 			sourceComponent: comp_canvas
 			active: root.lineConstantsObject_O&&lineVariablesObject_O&&root.coordinates_A.length>0
-//			onLoaded: rect_leftConnectorCanvas.adaptiveMarginCopy_r = item.heightAlias_r*0.05
+			//			onLoaded: rect_leftConnectorCanvas.adaptiveMarginCopy_r = item.heightAlias_r*0.05
 		}
 	}
 	Component{
 		id:comp_canvas
 		Flickable {
+
 			id:gVie_flickable
+//			ScrollBar.horizontal: ScrollBar {
+//					parent: gVie_flickable.parent
+//					anchors.top: gVie_flickable.top
+//					anchors.left: gVie_flickable.right
+//					anchors.bottom: gVie_flickable.bottom
+//				}
 			anchors.fill: parent
 			anchors{
 				topMargin: T3Styling.margin_r
@@ -142,65 +149,76 @@ Item {
 
 				Repeater{
 					model:coordinates_A/*[lineObjIndex_i]*/
-					delegate:T3RailBlock{
-						blockId_s:coordinates_A/*[lineObjIndex_i]*/[index][0]
-						ld_b: {
-							let prevBlock2_s = lineConstantsObject_O["blocksMap"][blockId_s]["prevBlock2"];
-							return prevBlock2_s!==""&&prevBlock2_s!=="PASSIVE"
-						}
-						rd_b: {
-							let nextBlock2_s = lineConstantsObject_O["blocksMap"][blockId_s]["nextBlock2"];
-							return nextBlock2_s!==""&&nextBlock2_s!=="PASSIVE"
-						}
-						stationInfo_s: {
-							let station_sA = lineConstantsObject_O["blocksMap"][blockId_s]["station"].split("_")
-							return station_sA.length===2?station_sA[1]:""
-						}
-						crossingInfo_s:{
-							if(lineConstantsObject_O["blocksMap"][blockId_s]["crossing"])
-								return lineVariablesObject_O[blockId_s]["crossingPosition"]
-							else
-								return ""
-						}
-						color_c: {//probably needs change
-							let failure_b = lineVariablesObject_O[blockId_s]["failure"];
-							let authority_b = lineVariablesObject_O[blockId_s]["authority"];
-							if(failure_b)
-									return T3Styling.cRed_c
-							else{
-								if(authority_b)
-									return T3Styling.cGreen_c
-								else
-									return T3Styling.cYellow_c
-							}
-
-						}
-						isUndg_b: lineConstantsObject_O["blocksMap"][blockId_s]["underground"]
-						fwdInfo_s: {
-							let direction_s = lineConstantsObject_O["blocksMap"][blockId_s]["direction"];
-							if(direction_s==="BIDIRECTIONAL"||direction_s==="FORWARD"){
-								lineVariablesObject_O[blockId_s]["forwardLight"]
-							}else{
-								return ""
-							}
-						}
-						bwdInfo_s: {
-							let direction_s = lineConstantsObject_O["blocksMap"][blockId_s]["direction"];
-							if(direction_s==="BIDIRECTIONAL"||direction_s==="REVERSED"){
-								lineVariablesObject_O[blockId_s]["reversedLight"]
-							}else{
-								return ""
-							}
-						}
-//						trainInfo_s: lineVariablesObject_O[blockId_s]["trainOnBlock"].replace("r","")
-						trainMoveForward_b:!lineVariablesObject_O[blockId_s]["trainOnBlock"].includes("r")
-						x:unitWidth_r*coordinates_A/*[lineObjIndex_i]*/[index][1][1]+rect_leftConnectorCanvas.width
-						y:coordinates_A/*[lineObjIndex_i]*/[index][1][0]*(height-adaptiveMargin_r)
-						//						opacity: y===0?1:0
+					delegate:
+						Rectangle{
 						width: unitWidth_r*coordinates_A/*[lineObjIndex_i]*/[index][2]
 						height: (rect_blockGrid.height)/2
+						x:unitWidth_r*coordinates_A/*[lineObjIndex_i]*/[index][1][1]+rect_leftConnectorCanvas.width
+						y:coordinates_A[index][1][0]*(height-height*0.1)
+						color: "transparent"
+						T3CTCRailBlock{
+							anchors.fill: parent
+							blockId_s:coordinates_A/*[lineObjIndex_i]*/[index][0]
+							ld_b: {
+								let prevBlock2_s = lineConstantsObject_O["blocksMap"][blockId_s]["prevBlock2"];
+								return prevBlock2_s!==""&&prevBlock2_s!=="PASSIVE"
+							}
+							rd_b: {
+								let nextBlock2_s = lineConstantsObject_O["blocksMap"][blockId_s]["nextBlock2"];
+								return nextBlock2_s!==""&&nextBlock2_s!=="PASSIVE"
+							}
+							stationInfo_s: {
+								let station_sA = lineConstantsObject_O["blocksMap"][blockId_s]["station"].split("_")
+								return station_sA.length===2?station_sA[1]:""
+							}
+							crossingInfo_s:{
+								if(lineConstantsObject_O["blocksMap"][blockId_s]["crossing"])
+									return lineVariablesObject_O[blockId_s]["crossingPosition"]
+								else
+									return ""
+							}
+							color_c: {//probably needs change
+								let failure_b = lineVariablesObject_O[blockId_s]["failure"];
+								let authority_b = lineVariablesObject_O[blockId_s]["authority"];
+								if(failure_b)
+									return T3Styling.cRed_c
+								else{
+									if(authority_b)
+										return T3Styling.cGreen_c
+									else
+										return T3Styling.cYellow_c
+								}
 
+							}
+							isUndg_b: lineConstantsObject_O["blocksMap"][blockId_s]["underground"]
+							fwdInfo_s: {
+								let direction_s = lineConstantsObject_O["blocksMap"][blockId_s]["direction"];
+								if(direction_s==="BIDIRECTIONAL"||direction_s==="FORWARD"){
+									lineVariablesObject_O[blockId_s]["forwardLight"]
+								}else{
+									return ""
+								}
+							}
+							bwdInfo_s: {
+								let direction_s = lineConstantsObject_O["blocksMap"][blockId_s]["direction"];
+								if(direction_s==="BIDIRECTIONAL"||direction_s==="REVERSED"){
+									lineVariablesObject_O[blockId_s]["reversedLight"]
+								}else{
+									return ""
+								}
+							}
+							trainMoveForward_b:!lineVariablesObject_O[blockId_s]["trainOnBlock"].includes("r")
+							hovered_b: mAre_railBlock.containsMouse
+							pressed_b: mAre_railBlock.containsPress
+						}
+						MouseArea{
+							id:mAre_railBlock
+							hoverEnabled: true
+							anchors.fill: parent
+						}
 					}
+
+
 				}
 			}
 		}

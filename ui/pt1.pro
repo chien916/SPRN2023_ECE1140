@@ -21,10 +21,6 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 HEADERS += \
-	t3ctcoffice.hpp \
-	t3pidcontroller.h \
+	t3database.hpp \
 	t3trackcontroller.hpp \
-	t3trackdatabase.hpp \
-	t3traincontroller.hpp \
-	t3traindatabase.hpp \
-	t3trainmodel.hpp
+	t3traincontroller.hpp

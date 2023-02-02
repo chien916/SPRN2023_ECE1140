@@ -1,9 +1,11 @@
 #ifndef T3TRACKCONTROLLER_H
 #define T3TRACKCONTROLLER_H
 #include <QtCore>
+#include <QtQml>
 class T3TrackController: public QObject {
 	Q_OBJECT
 	explicit T3TrackController(QObject *parent = nullptr);
+
 	//6.0 Wayside receive suggested speed & authorityfrom CTC
 
 	//  public Q_SLOTS:
@@ -20,15 +22,32 @@ class T3TrackController: public QObject {
 	//6.8 In maintenance mode, manually set a switch position
 	//6.9 Has safety critical architecture
 
+  private:
+	struct PlcModule {
+	  private:
+		QJSEngine evaluator;
+	  public:
+		void evaluate();
+	} plcModule;
   public Q_SLOTS:
 	void post(const QString request);
 };
 
 inline T3TrackController::T3TrackController(QObject *parent): QObject(parent) {
-//TO-DO
+	//TO-DO
 }
 
 inline void T3TrackController::post(const QString request) {
 	//TO-DO
+}
+
+inline void T3TrackController::PlcModule::evaluate() {
+	/**
+	 * inputs:
+	 *
+	 *
+	 */
+
+
 }
 #endif // T3TRACKCONTROLLER_H
