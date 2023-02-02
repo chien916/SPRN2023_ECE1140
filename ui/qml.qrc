@@ -15,5 +15,6 @@
         <file>T3ParamConfigUnit.qml</file>
         <file>T3Button.qml</file>
         <file>T3CTCMainMenu.qml</file>
+        <file>T3CTCTestInterface.qml</file>
     </qresource>
 </RCC>

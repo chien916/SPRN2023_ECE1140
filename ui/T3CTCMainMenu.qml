@@ -64,7 +64,14 @@ Item {
 				width: colu_column.width
 				height: colu_column.unitHeight_r
 				buttonLabel_s: "Debugging Interface"
+				onButtonClicked: {
+								var component = Qt.createComponent("qrc:/T3CTCTestInterface.qml")
+								var window    = component.createObject(root)
+								window.show()
+
+				}
 			}
+
 			T3Button{
 				width: colu_column.width
 				height: colu_column.unitHeight_r

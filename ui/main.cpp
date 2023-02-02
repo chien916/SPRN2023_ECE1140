@@ -25,7 +25,6 @@ int main(int argc, char *argv[]) {
 
 	engine.load(url);
 
-
 //	testTrainController.startTimer(100);
 
 	QFontDatabase::addApplicationFont(":/T3InterFont.ttf");
