@@ -7,12 +7,14 @@ Item {
 	property int maxValue_n: 100
 	property int minValue_n: 0
 	property int currValue_n: 50
-	implicitHeight: 500
+	property bool textOnly_b: false
+	property bool toggle_b: true
+	implicitHeight: 150
 	implicitWidth: 500
 	Rectangle{
 		id:rectangle_container
-		color: T3Styling.cBgSub_c
-		radius: T3Styling.margin_r
+		color: T3Styling.cBgMain_c
+//		radius: T3Styling.margin_r
 		anchors{
 			horizontalCenter: parent.horizontalCenter
 			verticalCenter: parent.verticalCenter
@@ -28,7 +30,7 @@ Item {
 			height: width
 			CircularGauge{
 				anchors.fill: parent
-				anchors.margins: parent.height*0.05
+				anchors.margins: parent.height*0.01
 				style: CircularGaugeStyle {
 						needle: Rectangle {
 							y: outerRadius * 0.2
@@ -37,6 +39,8 @@ Item {
 							antialiasing: true
 							color: T3Styling.cFgMain_c
 							radius: outerRadius * 0.05
+							opacity: textOnly_b?0:1
+							Behavior on opacity {NumberAnimation{easing.type: Easing.InOutCubic}}
 						}
 						foreground: Rectangle {
 								width: outerRadius * 0.2
@@ -44,6 +48,8 @@ Item {
 								radius: width / 2
 								color: T3Styling.cFgMain_c
 								anchors.centerIn: parent
+								opacity: textOnly_b?0:1
+								Behavior on opacity {NumberAnimation{easing.type: Easing.InOutCubic}}
 							}
 						tickmark: Rectangle {
 							visible: true
@@ -62,17 +68,35 @@ Item {
 							radius: outerRadius * 0.02
 						}
 						tickmarkLabel:  Text {
-							font.pixelSize: Math.max(6, outerRadius * 0.1)
+							font.pixelSize: Math.max(6, outerRadius * 0.13)
 							font.family: "Inter"
 							text: styleData.value
 							color: T3Styling.cFgSub_c
 							antialiasing: true
+							opacity: textOnly_b?0:1
+							Behavior on opacity {NumberAnimation{}}
 						}
 					}
 				value: currValue_n
 				Behavior on value {NumberAnimation{}}
 				maximumValue: root.maxValue_n
 				minimumValue: root.minValue_n
+			}
+			T3Text{
+				anchors.fill: parent
+				anchors.margins: root.height*0.2
+				textPixelSize_r: T3Styling.fontMain_r
+				textColor_c: T3Styling.cFgMain_c
+				opacity: !textOnly_b?0:1
+				textContent_s: currValue_n
+			}
+			T3Text{
+				anchors.bottom: parent.bottom
+				anchors.left: parent.left
+				anchors.right: parent.right
+				textPixelSize_r: T3Styling.fontMain_r
+				textColor_c: T3Styling.cFgMain_c
+				textContent_s: gaugeUnit_s
 			}
 			Text{
 				anchors{
@@ -83,6 +107,7 @@ Item {
 				height:  item_ratioKeeper.width*0.1
 				text:"~~~"
 				font.family: "DSEG14 Classic"
+				visible: false
 				font.pixelSize: T3Styling.fontMain_r
 				fontSizeMode: Text.Fit
 				color: T3Styling.cFgSub_c
@@ -90,42 +115,17 @@ Item {
 				verticalAlignment: Text.AlignVCenter
 				opacity: 0.15
 			}
-			Text{
-				anchors{
-					horizontalCenter: parent.horizontalCenter
-					bottom: text_digitalDisplayForeground.top
-					margins: parent.height*0.05
-				}
-				height:  item_ratioKeeper.width*0.1
-				text:root.gaugeUnit_s
-				font.family: "Inter"
-				font.pixelSize: T3Styling.fontSub_r
-				fontSizeMode: Text.Fit
-				horizontalAlignment: Text.AlignHCenter
-				verticalAlignment: Text.AlignVCenter
-				color: T3Styling.cFgSub_c
-			}
-			Text{
-				id:text_digitalDisplayForeground
-				anchors{
-					horizontalCenter: parent.horizontalCenter
-					bottom: parent.bottom
-					margins: parent.height*0.05
-				}
-				height: item_ratioKeeper.width*0.1
-				text:root.currValue_n.toString().padStart(3,"!").substring(0,3)
-				font.family: "DSEG14 Classic"
-				font.pixelSize: T3Styling.fontMain_r
-				fontSizeMode: Text.Fit
-				horizontalAlignment: Text.AlignHCenter
-				verticalAlignment: Text.AlignVCenter
-				color: T3Styling.cFgMain_c
-			}
 		}
 	}
 	//for testing only
 	MouseArea{
 		anchors.fill: parent
 		onClicked: currValue_n-=10
+	}
+	Timer{
+		running: toggle_b
+		repeat: true
+		onTriggered: textOnly_b = !textOnly_b;
+		interval: 3000
 	}
 }

@@ -11,6 +11,7 @@ Item {
 	property real minScreenPixel_r: 500
 	readonly property color cBgMain_c: "#000000"
 	readonly property color cBgSub_c: "#212121"
+	readonly property color cBgSubSub_c: "#212121"
 	readonly property color cFgMain_c: "#ffffff"
 	readonly property color cFgSub_c: "#a6a6a6"
 	readonly property color cFgSubSub_c: "#3c3c3c"
@@ -23,4 +24,5 @@ Item {
 	readonly property real lineWidth_r:margin_r*0.1
 	readonly property real fontMain_r: minScreenPixel_r*0.1
 	readonly property real fontSub_r: minScreenPixel_r*0.05
+	readonly property real fontSubSub_r: minScreenPixel_r*0.025
 }

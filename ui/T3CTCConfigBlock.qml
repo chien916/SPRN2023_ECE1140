@@ -1,10 +1,10 @@
 import QtQuick 2.12
 
-Item {
+Item {/*
 	signal cancelClicked();
 	signal applyClicked();
 	readonly property variant configModel_nA:[
-		//fieldId, displayName, twoStates, textOnly
+		//[textonly,twostate,labal,unit]
 		["maintain","maintainance mode",true]
 		,["authority","authority",true]
 		,["commandedSpeed","commanded speed",false]
@@ -67,7 +67,7 @@ Item {
 				topMargin: T3Styling.margin_r
 				leftMargin: T3Styling.margin_r
 				rightMargin: T3Styling.margin_r
-				bottom: T3Styling.margin_r*3
+				bottomMargin: T3Styling.margin_r*3
 			}
 //			clip: true
 			spacing: T3Styling.spacing_r
@@ -83,7 +83,6 @@ Item {
 					textonly_b:false
 					fixedPoint_i:2
 					twoStates_b: modelData[2]
-					ticks :null
 					width: col_column.width
 				}
 			}
@@ -117,5 +116,5 @@ Item {
 
 
 	implicitWidth: 250
-	implicitHeight: 500
+	implicitHeight: 500*/
 }

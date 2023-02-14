@@ -171,7 +171,7 @@ Item {
 			width: root.width*0.3
 			//			opacity: configMode_b?1:0
 			//			Behavior on opacity {PropertyAnimation{easing.type: Easing.OutCirc}}
-			onApplyClicked: configMode_b = false
+//			onApplyClicked: configMode_b = false
 		}
 
 		T3CTCMainMenu{

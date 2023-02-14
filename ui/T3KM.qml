@@ -1,0 +1,123 @@
+import QtQuick 2.12
+import QtQuick.Controls 2.15
+import QtQuick.Layouts 1.15
+Item {
+	id:root
+	implicitHeight: 500
+	implicitWidth: 700
+	property variant kmInfoModel_A :
+		[["Track Data"
+		  ,["T_F_Grade_%"
+			,"T_F_Elevation_ft"
+			,"T_F_Length_ft"
+			,"T_F_Speed Limit_mph"
+			,"T_F_Direction Of Travel_"
+			,"T_F_Crossing_"
+			,"T_F_Heaters_"
+			,"T_F_Train Occupancy_"]]
+		,["Station Information"
+		  ,["T_F_Name_%"
+			,"T_F_Side_ft"
+			,"T_F_Passangers On Station_"
+			,"T_F_Passangers Boarding_"
+			,"T_F_Passangers Disembarking_"]
+		]]
+	property variant kmCtrlModel_A :
+		[["Failure Mode"
+		  ,["F_T_Broken Rail_"
+			,"F_T_Circuit Failure_"
+			,"F_T_Power Failure_"
+		  ]]
+		,["Environment"
+		  ,["F_F_Temperature_F"]
+		]]
+	//	property variant currBlockDataModel_A :
+	//		[["grade","%"]
+	//		,["elevation","m"]
+	//		,["length","m"]
+	//		,["speed limit","kph"]
+	//		,["direction of travel",""]
+	//		,["track heaters","%"]
+	//		,["train occupancy",""]
+	//	];
+
+	Rectangle{
+		color: T3Styling.cBgSub_c
+		anchors.fill: root
+	}
+	Item{
+		id:item_canvas
+		anchors.fill: parent
+		anchors.margins: T3Styling.margin_r
+		T3SegDisplay{
+			id:segD_segD
+			width: item_canvas.width
+			idleText_s: "T3 Track Model"
+			segCharCount_i: 30
+		}
+
+		T3CTCLineGrid{
+			anchors{
+				top: segD_segD.bottom
+				topMargin: T3Styling.margin_r
+				right:rect_config.left
+				rightMargin: T3Styling.margin_r
+				left:item_canvas.left
+				bottom: item_canvas.bottom
+			}
+		}
+
+		Rectangle{
+			id:rect_config
+			anchors{
+				top: segD_segD.bottom
+				topMargin: T3Styling.margin_r
+				bottom: row_applyCancelButtons.top
+				bottomMargin: T3Styling.margin_r
+				right: item_canvas.right
+			}
+			width: item_canvas.width*0.3
+			color: "transparent"
+			ListView{
+				anchors.fill: parent
+				clip: true
+				ScrollBar.vertical: ScrollBar {
+					id:sBar_config
+					active: true
+				}
+				spacing: T3Styling.spacing_r
+				model:kmInfoModel_A.concat(kmCtrlModel_A)
+				delegate: 	T3ParamUnitGroup{
+					title_s: modelData[0]
+					model_A: modelData[1]
+					width: item_canvas.width*0.3
+					height: paintedHeight_r
+				}
+			}
+
+		}
+		Row{
+			id:row_applyCancelButtons
+			anchors{
+				right: item_canvas.right
+				bottom: item_canvas.bottom
+			}
+			width: item_canvas.width*0.3
+			spacing: T3Styling.margin_r
+			Repeater{
+				model:["Apply","Cancel"]
+				delegate:T3Button{
+					buttonLabel_s: modelData
+					width:(row_applyCancelButtons.width
+						   -row_applyCancelButtons.spacing)/2
+				}
+			}
+		}
+
+
+
+
+
+
+	}
+}

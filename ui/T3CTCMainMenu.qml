@@ -10,7 +10,7 @@ Item {
 		anchors.fill: parent
 		Column{
 			id:colu_column
-			property int count_i :7
+			property int count_i :8
 			readonly property real unitHeight_r
 			:(rect_canvas.height-2*colu_column.anchors.margins
 			  - (count_i-1)*colu_column.spacing)/count_i
@@ -32,23 +32,22 @@ Item {
 				horizontalAlignment: Text.AlignHCenter
 				verticalAlignment: Text.AlignVCenter
 			}
-			T3ParamConfigUnit{
+			T3ParamUnit{
 				width: colu_column.width
 				height: colu_column.unitHeight_r
-				valueLabel_s: "clock rate"
+				paramConfig_A: "F_F_Clock Rate_x"
 				minValue_r: 0.1
 				maxValue_r: 50
-				twoStates_b: false
-				unitLabel_s: "x"
 			}
-			T3ParamConfigUnit{
+			T3ParamUnit{
 				width: colu_column.width
 				height: colu_column.unitHeight_r
-				valueLabel_s: "automatic dispatching"
-				minValue_r: 0.1
-				maxValue_r: 50
-				twoStates_b: true
-				unitLabel_s: "x"
+				paramConfig_A: "F_T_Automatic Mode_"
+			}
+			T3Button{
+				width: colu_column.width
+				height: colu_column.unitHeight_r
+				buttonLabel_s: "Load line"
 			}
 			T3Button{
 				width: colu_column.width
@@ -58,7 +57,7 @@ Item {
 			T3Button{
 				width: colu_column.width
 				height: colu_column.unitHeight_r
-				buttonLabel_s: "Manuall Dispatch"
+				buttonLabel_s: "Manually Dispatch"
 			}
 			T3Button{
 				width: colu_column.width

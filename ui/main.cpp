@@ -21,6 +21,7 @@ int main(int argc, char *argv[]) {
 	}, Qt::QueuedConnection);
 
 	T3Database t3database;
+	t3database.startTimer(500);
 	engine.rootContext()->setContextProperty("t3databaseQml", &t3database);
 
 	engine.load(url);

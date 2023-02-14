@@ -1,7 +1,7 @@
 import QtQuick 2.12
 
 Item {
-	implicitHeight: 100
+	implicitHeight: T3Styling.fontSubSub_r+T3Styling.spacing_r*2
 	implicitWidth: 200
 	property string buttonLabel_s :"buttonText"
 	signal buttonClicked()
@@ -18,19 +18,14 @@ Item {
 		anchors{
 			fill: parent
 		}
-		Text{
-			text:buttonLabel_s.toUpperCase()
-			font.pixelSize: T3Styling.fontSub_r
-			color: T3Styling.cFgMain_c
+		T3Text{
+			textContent_s: buttonLabel_s
+			textPixelSize_r: T3Styling.fontSubSub_r
+			textColor_c: T3Styling.cFgMain_c
 			anchors{
 				margins: T3Styling.spacing_r
 				fill:parent
 			}
-			font.family: "Inter"
-			font.bold: true
-			fontSizeMode: Text.Fit
-			horizontalAlignment: Text.AlignHCenter
-			verticalAlignment: Text.AlignVCenter
 		}
 	}
 	MouseArea{
