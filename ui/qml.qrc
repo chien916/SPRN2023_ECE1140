@@ -20,10 +20,11 @@
         <file>T3Text.qml</file>
         <file>T3KM.qml</file>
         <file>T3SegDisplay.qml</file>
-        <file>T3TC.qml</file>
         <file>T3Tumbler.qml</file>
         <file>T3NM.qml</file>
         <file>T3NC.qml</file>
         <file>T3NCPid.qml</file>
+        <file>T3NCDial.qml</file>
+        <file>T3KC.qml</file>
     </qresource>
 </RCC>

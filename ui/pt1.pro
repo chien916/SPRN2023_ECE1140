@@ -22,5 +22,4 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 HEADERS += \
 	t3database.hpp \
-	t3trackcontroller.hpp \
-	t3traincontroller.hpp
+	t3trainflow.hpp

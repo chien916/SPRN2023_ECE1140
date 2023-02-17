@@ -38,17 +38,17 @@
 
 class T3Database: public QObject {
 	Q_OBJECT
-//  private:
 	//Context variables exposed to QML:
 	Q_PROPERTY(QJsonArray trackConstantsObjects_QML MEMBER trackConstantsObjects NOTIFY onTrackConstantsObjectsChanged)
 	Q_PROPERTY(QJsonArray trackVariablesObjects_QML MEMBER trackVariablesObjects NOTIFY onTrackVariablesObjectsChanged)
 	QJsonArray trackConstantsObjects;//do not modify directly after initialization. use the setTrackProperty() slot instead!
 	QJsonArray trackVariablesObjects;//do not modify directly after initialization. use the setTrackProperty() slot instead!
-	QJsonObject trainConstantsObjects;
-	QJsonObject trainVariablesObjects;
+	Q_PROPERTY(QJsonArray trainObjects_QML MEMBER trainObjects NOTIFY onTrainObjectsChanged)
+	QJsonArray trainObjects;
   Q_SIGNALS:
 	void onTrackConstantsObjectsChanged();
 	void onTrackVariablesObjectsChanged();
+	void onTrainObjectsChanged();
   public:
 	T3Database(QObject *parent = nullptr);
 	//Track properties definiations
@@ -67,10 +67,12 @@ class T3Database: public QObject {
 	Q_ENUM(TrackProperty);
 	//Train properties definitions
 	enum TrainProperty {
-		LENGTH
-		, HEIGHT
-		, WIDTH
-		, MASS
+		Id
+		, Length
+		, Height
+		, Width
+		, Mass
+		, PidConstants
 		, Acceleration
 		, Velocity
 		, CrewCount
@@ -101,10 +103,12 @@ class T3Database: public QObject {
 
 	const QHash<T3Database::TrainProperty, QPair<QString, int>> trainPropertiesMetaDataMap
 	= std::initializer_list<std::pair<T3Database::TrainProperty, QPair<QString, int>>> {
-		std::make_pair(T3Database::TrainProperty::LENGTH, QPair<QString, int>(QString("length"), qMetaTypeId<float>()))
-		, std::make_pair(T3Database::TrainProperty::HEIGHT, QPair<QString, int>(QString("height"), qMetaTypeId<float>()))
-		, std::make_pair(T3Database::TrainProperty::WIDTH, QPair<QString, int>(QString("width"), qMetaTypeId<float>()))
-		, std::make_pair(T3Database::TrainProperty::MASS, QPair<QString, int>(QString("mass"), qMetaTypeId<float>()))
+		std::make_pair(T3Database::TrainProperty::Length, QPair<QString, int>(QString("id"), qMetaTypeId<QString>()))
+		, std::make_pair(T3Database::TrainProperty::Length, QPair<QString, int>(QString("length"), qMetaTypeId<float>()))
+		, std::make_pair(T3Database::TrainProperty::Height, QPair<QString, int>(QString("height"), qMetaTypeId<float>()))
+		, std::make_pair(T3Database::TrainProperty::Width, QPair<QString, int>(QString("width"), qMetaTypeId<float>()))
+		, std::make_pair(T3Database::TrainProperty::Mass, QPair<QString, int>(QString("mass"), qMetaTypeId<float>()))
+		, std::make_pair(T3Database::TrainProperty::PidConstants, QPair<QString, int>(QString("pidData"), qMetaTypeId<QJsonObject>()))
 		, std::make_pair(T3Database::TrainProperty::Acceleration, QPair<QString, int>(QString("acceleration"), qMetaTypeId<float>()))
 		, std::make_pair(T3Database::TrainProperty::Velocity, QPair<QString, int>(QString("velocity"), qMetaTypeId<float>()))
 		, std::make_pair(T3Database::TrainProperty::CrewCount, QPair<QString, int>(QString("crewCount"), qMetaTypeId<uint16_t>()))
@@ -117,7 +121,6 @@ class T3Database: public QObject {
 		, std::make_pair(T3Database::TrainProperty::Brakes, QPair<QString, int>(QString("brakes"), qMetaTypeId<QString>()))
 		, std::make_pair(T3Database::TrainProperty::Failures, QPair<QString, int>(QString("failures"), qMetaTypeId<QString>()))
 	};
-	//  public Q_SLOTS:
   public:
 	void setTrackProperty(QString blockId, T3Database::TrackProperty trackProperty, QVariant value);
 	QVariant getTrackProperty(QString blockId, T3Database::TrackProperty trackProperty);
@@ -319,24 +322,45 @@ inline void T3Database::setTrainProperty(QString trainId, TrainProperty trainPro
 	if(!value.canConvert(metaData.second))
 		qFatal("T3Database::setTrainProperty() -> property value required and insetTrackPropertyted format doesn't match");
 	value.convert(metaData.second);
-
-	if(trainVariablesObjects.find(trainId) == trainVariablesObjects.end())
-		qFatal("T3Database::setTrainProperty() -> cannot find train with ID provided");
-
-	QJsonObject currTrainVariablesObject = trainVariablesObjects[trainId].toObject();
-	currTrainVariablesObject[metaData.first] = value.toJsonValue();
-	trainVariablesObjects[trainId] = currTrainVariablesObject;
-
+	for(qsizetype i = 0; i < trainObjects.size(); ++i) {
+		if(!trainObjects.at(i).isObject())
+			qFatal("T3Database::setTrainProperty() -> current train object is not an object.");
+		QJsonObject currTrainObject = trainObjects.at(i).toObject();
+		if(currTrainObject.find(QString("id")) == currTrainObject.end())
+			qFatal("T3Database::setTrainProperty() -> current train object does not has id field.");
+		if(currTrainObject.value("id") == trainId) {
+			if(currTrainObject.find(metaData.first) == currTrainObject.end())
+				qFatal("T3Database::setTrainProperty() -> current train object does not has the requested field.");
+			currTrainObject[metaData.first] = value.toJsonValue();
+			return;
+		}
+	}
+	qFatal("T3Database::setTrainProperty() -> cannot find train with ID provided");
 }
 
 inline QVariant T3Database::getTrainProperty(QString trainId, TrainProperty trainProperty) {
 	QPair<QString, int> metaData = trainPropertiesMetaDataMap.value(trainProperty);
-	if(trainVariablesObjects.find(trainId) == trainVariablesObjects.end())
-		qFatal("T3Database::getTrainProperty() -> cannot find train with ID provided");
-	QJsonObject currTrainVariablesObject = trainVariablesObjects[trainId].toObject();
-	QVariant valueRequested = currTrainVariablesObject[metaData.first].toVariant();
-	valueRequested.convert(metaData.second);
-	return valueRequested;
+	for(qsizetype i = 0; i < trainObjects.size(); ++i) {
+		if(!trainObjects.at(i).isObject())
+			qFatal("T3Database::getTrainProperty() -> current train object is not an object.");
+		QJsonObject currTrainObject = trainObjects.at(i).toObject();
+		if(currTrainObject.find(QString("id")) == currTrainObject.end())
+			qFatal("T3Database::getTrainProperty() -> current train object does not has id field.");
+		if(currTrainObject.value("id") == trainId) {
+			if(currTrainObject.find(metaData.first) == currTrainObject.end())
+				qFatal("T3Database::getTrainProperty() -> current train object does not has the requested field.");
+			QVariant res = currTrainObject[metaData.first].toVariant();
+			if(!res.canConvert(metaData.second))
+				qFatal("T3Database::setTrainProperty() -> property value required and insetTrackPropertyted format doesn't match");
+			res.convert(metaData.second);
+			return res;
+		}
+	}
+	qFatal("T3Database::setTrainProperty() -> cannot find train with ID provided");
+}
+
+inline void T3Database::addTrainFromCtc(const QString metaInfo) {
+
 }
 
 inline T3Database::T3Database(QObject * parent) : QObject(parent) {

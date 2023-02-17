@@ -2,46 +2,63 @@ import QtQuick 2.12
 
 Item {
 	id:root
-	implicitHeight: 200
+	implicitHeight: item_canvas.unitHeight_r*3+T3Styling.spacing_r*4
 	implicitWidth: 500
 	property variant data_O:{
 		"r_r":1
 		, "e_r":2
 		,"p_r":3
 		,"i_r":4
-		,"d_r":5
+		,"d_r":5.46
 		,"u_r":6
 		,"y_r":7
+		,"kp_r":0
+		,"ki_r":0
+		,"kd_r":0
 	}
-	onData_OChanged: {
-		if(load_rInPid.status !==Loader.Ready
-				||load_eInPid.status !==Loader.Ready
-				||load_pInPid.status !==Loader.Ready
-				||load_iInPid.status !==Loader.Ready
-				||load_dInPid.status !==Loader.Ready
-				||load_uInPid.status !==Loader.Ready
-				||load_yInPid.status !==Loader.Ready)
-			return;
-		load_rInPid.item.value_s = data_O["r_r"];
-		load_eInPid.item.value_s = data_O["e_r"];
-		load_pInPid.item.value_s = data_O["p_r"];
-		load_iInPid.item.value_s = data_O["i_r"];
-		load_dInPid.item.value_s = data_O["d_r"];
-		load_uInPid.item.value_s = data_O["u_r"];
-		load_yInPid.item.value_s = data_O["y_r"];
-	}
+//	onData_OChanged: {
+//		if(load_rInPid.status !==Loader.Ready
+//				||load_eInPid.status !==Loader.Ready
+//				||load_pInPid.status !==Loader.Ready
+//				||load_iInPid.status !==Loader.Ready
+//				||load_dInPid.status !==Loader.Ready
+//				||load_uInPid.status !==Loader.Ready
+//				||load_yInPid.status !==Loader.Ready)
+//			return;
+//		load_rInPid.item.value_s = data_O["r_r"];
+//		load_eInPid.item.value_s = data_O["e_r"];
+//		load_pInPid.item.value_s = data_O["p_r"];
+//		load_iInPid.item.value_s = data_O["i_r"];
+//		load_dInPid.item.value_s = data_O["d_r"];
+//		load_uInPid.item.value_s = data_O["u_r"];
+//		load_yInPid.item.value_s = data_O["y_r"];
+//	}
 	Rectangle{
 		anchors.fill: parent
-		color: T3Styling.cBgMain_c
+		color: T3Styling.cFgSubSub_c
+		radius: T3Styling.lineWidth_r
+		T3Text{
+			anchors.left: parent.left
+			anchors.right: parent.right
+//			anchors.rightMargin: T3Styling.spacing_r
+			anchors.bottom: parent.bottom
+			height: parent.height*0.2
+			textPixelSize_r: parent.height*0.08
+			textLetterSpacing_r: textPixelSize_r*0.1
+			textContent_s: "Inspired by Cindy "
+			textBold_b: true
+			textColor_c: T3Styling.cBgMain_c
+			textAlign_s: "right"
+		}
 	}
 	Item{
 		id:item_canvas
 		anchors.fill: parent
+		anchors.margins: T3Styling.spacing_r
 		readonly property real circleWidth_r: T3Styling.fontSubSub_r+T3Styling.spacing_r*2
 		readonly property real rectangleWidth_r:T3Styling.fontSubSub_r*6
 		readonly property real unitHeight_r:T3Styling.fontSubSub_r+T3Styling.spacing_r*2
 		readonly property real rowSpacing_r:(width-rectangleWidth_r*4-circleWidth_r*2)/5
-
 		Column{
 			anchors.fill: parent
 			spacing: T3Styling.spacing_r
@@ -382,33 +399,13 @@ Item {
 					onLoaded:item.textContent_s = "↗"
 				}
 			}
-			Rectangle{
-				id:rect_row4
-				color: "transparent"
-				height: item_canvas.unitHeight_r
-				width: parent.width
-			}
-			Rectangle{
-				id:rect_row5
-				color: "transparent"
-				height: item_canvas.unitHeight_r
-				width: parent.width
-			}
-
-
-
-
-
 		}
-
-
-
 
 		Component{
 			id:comp_arrow
 			T3Text{
 				textContent_s: "→"
-				textColor_c: T3Styling.cFgSub_c
+				textColor_c: T3Styling.cFgMain_c
 				textPixelSize_r: T3Styling.fontSubSub_r
 			}
 		}
@@ -424,8 +421,8 @@ Item {
 				width: item_canvas.rectangleWidth_r
 				radius: T3Styling.lineWidth_r
 				color: T3Styling.cBgMain_c
-				border.width: T3Styling.lineWidth_r*0.5
-				border.color:border_b?T3Styling.cBgSub_c:"transparent"
+				//border.width: T3Styling.lineWidth_r*0.5
+				//border.color:border_b?T3Styling.cBgSub_c:"transparent"
 				T3Text{
 					anchors{
 						left: parent.left
@@ -463,8 +460,8 @@ Item {
 				width: item_canvas.circleWidth_r
 				radius: height
 				color: T3Styling.cBgMain_c
-				border.width: T3Styling.lineWidth_r*0.5
-				border.color:T3Styling.cBgSub_c
+				//border.width: T3Styling.lineWidth_r*0.5
+				//border.color:T3Styling.cBgSub_c
 				T3Text{
 					anchors{
 						left: parent.left
@@ -483,7 +480,19 @@ Item {
 	}
 
 
-	Component.onCompleted:{
-		data_O["r_r"] = 3;
+	Timer{
+		interval: 50
+		running: true
+		repeat: true
+		onTriggered: {
+//			console.log(load_rInPid.item.value_s)
+			load_rInPid.item.value_s = data_O["r_r"];
+			load_eInPid.item.value_s = data_O["e_r"];
+			load_pInPid.item.value_s = data_O["p_r"];
+			load_iInPid.item.value_s = data_O["i_r"];
+			load_dInPid.item.value_s = data_O["d_r"];
+			load_uInPid.item.value_s = data_O["u_r"];
+			load_yInPid.item.value_s = data_O["y_r"];
+		}
 	}
 }
