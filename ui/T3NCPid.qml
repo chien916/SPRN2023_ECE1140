@@ -37,19 +37,6 @@ Item {
 		anchors.fill: parent
 		color: T3Styling.cFgSubSub_c
 		radius: T3Styling.lineWidth_r
-		T3Text{
-			anchors.left: parent.left
-			anchors.right: parent.right
-//			anchors.rightMargin: T3Styling.spacing_r
-			anchors.bottom: parent.bottom
-			height: parent.height*0.2
-			textPixelSize_r: parent.height*0.08
-			textLetterSpacing_r: textPixelSize_r*0.1
-			textContent_s: "Inspired by Cindy "
-			textBold_b: true
-			textColor_c: T3Styling.cBgMain_c
-			textAlign_s: "right"
-		}
 	}
 	Item{
 		id:item_canvas

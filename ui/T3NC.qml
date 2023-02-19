@@ -2,7 +2,7 @@ import QtQuick 2.12
 
 Item {
 	implicitWidth: 1100
-	implicitHeight: 380
+	implicitHeight: 500
 	property real kp_r:0.0
 	property real ki_r:0.6
 	property real kd_r:0.7
@@ -159,6 +159,9 @@ Item {
 					textColor_c: T3Styling.cFgMain_c
 					textContent_s: "NO OPERATIONS"
 				}
+
+//				T3NMCircularGauge{
+//				}
 			}
 		}
 		Grid{
@@ -371,7 +374,7 @@ Item {
 		}
 
 
-		property int totalRow_n:5
+		property int totalRow_n:7
 		Grid{
 			id:grid_buttons
 			anchors{
@@ -382,7 +385,7 @@ Item {
 //				bottom:parent.bottom
 			}
 			spacing:T3Styling.spacing_r
-			rows: 3
+			rows: 5
 			columns:2
 			readonly property real unitWidth_r: (width-spacing*(columns-1))/columns
 			readonly property real unitHeight_r: (parent.height-spacing*(parent.totalRow_n-1))/parent.totalRow_n
@@ -391,6 +394,8 @@ Item {
 				model:["Turn On\nHeaters","Turn Off\nHeaters"
 					,"Open\nL Doors","Close\nL Doors"
 					,"Open\nR Doors","Close\nR Doors"
+					,"Turn On\nExterior Light","Turn Off\nExterior Light"
+					,"Turn On\nInterior Light","Turn Off\nInterior Light"
 				]
 				delegate:			T3Button{
 					width: parent.unitWidth_r

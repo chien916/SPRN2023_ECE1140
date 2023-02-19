@@ -2,6 +2,7 @@
 #define T3Database_H
 
 #include <QtCore>
+#include <QtQml>
 //#include "t3trackmodel.hpp"
 
 /**
@@ -44,7 +45,7 @@ class T3Database: public QObject {
 	QJsonArray trackConstantsObjects;//do not modify directly after initialization. use the setTrackProperty() slot instead!
 	QJsonArray trackVariablesObjects;//do not modify directly after initialization. use the setTrackProperty() slot instead!
 	Q_PROPERTY(QJsonArray trainObjects_QML MEMBER trainObjects NOTIFY onTrainObjectsChanged)
-	QJsonArray trainObjects;
+	QJsonArray trainObjects;//do not modify directly after initialization. use the setTrainProperty() slot instead!
   Q_SIGNALS:
 	void onTrackConstantsObjectsChanged();
 	void onTrackVariablesObjectsChanged();
@@ -67,25 +68,34 @@ class T3Database: public QObject {
 	Q_ENUM(TrackProperty);
 	//Train properties definitions
 	enum TrainProperty {
-		Id
-		, Length
-		, Height
-		, Width
-		, Mass
-		, PidConstants
-		, Acceleration
-		, Velocity
-		, CrewCount
-		, PassangerCount
-		, Aircon
-		, ExteriorLights
-		, InteriorLights
-		, LeftDoors
-		, RightDoors
-		, Brakes
-		, Failures
+		Id = 0
+		, Length = 1
+		, Height = 2
+		, Width = 3
+		, Mass = 4
+		, Acceleration = 5
+		, Velocity = 6
+		, CrewCount = 7
+		, PassangerCount = 8
+		, Aircon = 9
+		, ExteriorLights = 10
+		, InteriorLights = 11
+		, LeftDoors = 12
+		, RightDoors = 13
+		, Brakes = 14
+		, Failures = 15
+		, Pid_Prev_e
+		, Pid_Prev_y
+		, Pid_Sum_e
+		, Pid_Dt
+		, Pid_R
+		, Pid_Ki
+		, Pid_Kp
+		, Pid_Kd
 	};
 	Q_ENUM(TrainProperty);
+
+
   private:
 	const QHash<T3Database::TrackProperty, QPair<QString, int>> trackPropertiesMetaDataMap
 	= std::initializer_list<std::pair<T3Database::TrackProperty, QPair<QString, int>>> {
@@ -103,12 +113,11 @@ class T3Database: public QObject {
 
 	const QHash<T3Database::TrainProperty, QPair<QString, int>> trainPropertiesMetaDataMap
 	= std::initializer_list<std::pair<T3Database::TrainProperty, QPair<QString, int>>> {
-		std::make_pair(T3Database::TrainProperty::Length, QPair<QString, int>(QString("id"), qMetaTypeId<QString>()))
+		std::make_pair(T3Database::TrainProperty::Id, QPair<QString, int>(QString("id"), qMetaTypeId<QString>()))
 		, std::make_pair(T3Database::TrainProperty::Length, QPair<QString, int>(QString("length"), qMetaTypeId<float>()))
 		, std::make_pair(T3Database::TrainProperty::Height, QPair<QString, int>(QString("height"), qMetaTypeId<float>()))
 		, std::make_pair(T3Database::TrainProperty::Width, QPair<QString, int>(QString("width"), qMetaTypeId<float>()))
 		, std::make_pair(T3Database::TrainProperty::Mass, QPair<QString, int>(QString("mass"), qMetaTypeId<float>()))
-		, std::make_pair(T3Database::TrainProperty::PidConstants, QPair<QString, int>(QString("pidData"), qMetaTypeId<QJsonObject>()))
 		, std::make_pair(T3Database::TrainProperty::Acceleration, QPair<QString, int>(QString("acceleration"), qMetaTypeId<float>()))
 		, std::make_pair(T3Database::TrainProperty::Velocity, QPair<QString, int>(QString("velocity"), qMetaTypeId<float>()))
 		, std::make_pair(T3Database::TrainProperty::CrewCount, QPair<QString, int>(QString("crewCount"), qMetaTypeId<uint16_t>()))
@@ -120,15 +129,33 @@ class T3Database: public QObject {
 		, std::make_pair(T3Database::TrainProperty::RightDoors, QPair<QString, int>(QString("rightDoors"), qMetaTypeId<bool>()))
 		, std::make_pair(T3Database::TrainProperty::Brakes, QPair<QString, int>(QString("brakes"), qMetaTypeId<QString>()))
 		, std::make_pair(T3Database::TrainProperty::Failures, QPair<QString, int>(QString("failures"), qMetaTypeId<QString>()))
+		, std::make_pair(T3Database::TrainProperty::Pid_Prev_e, QPair<QString, int>(QString("pid_prev_e"), qMetaTypeId<float>()))
+		, std::make_pair(T3Database::TrainProperty::Pid_Prev_y, QPair<QString, int>(QString("pid_prev_y"), qMetaTypeId<float>()))
+		, std::make_pair(T3Database::TrainProperty::Pid_Sum_e, QPair<QString, int>(QString("pid_sum_e"), qMetaTypeId<float>()))
+		, std::make_pair(T3Database::TrainProperty::Pid_Dt, QPair<QString, int>(QString("pid_dt"), qMetaTypeId<float>()))
+		, std::make_pair(T3Database::TrainProperty::Pid_R, QPair<QString, int>(QString("pid_r"), qMetaTypeId<float>()))
+		, std::make_pair(T3Database::TrainProperty::Pid_Ki, QPair<QString, int>(QString("pid_ki"), qMetaTypeId<float>()))
+		, std::make_pair(T3Database::TrainProperty::Pid_Kp, QPair<QString, int>(QString("pid_kp"), qMetaTypeId<float>()))
+		, std::make_pair(T3Database::TrainProperty::Pid_Kd, QPair<QString, int>(QString("pid_kd"), qMetaTypeId<float>()))
 	};
+
+	QString plcProgram = "function(a){return a;}";
+
   public:
 	void setTrackProperty(QString blockId, T3Database::TrackProperty trackProperty, QVariant value);
 	QVariant getTrackProperty(QString blockId, T3Database::TrackProperty trackProperty);
 	void addTrackFromCsv(const QString filePath);
-
 	void setTrainProperty(QString trainId, T3Database::TrainProperty trainProperty, QVariant value);
 	QVariant getTrainProperty(QString trainId, T3Database::TrainProperty trainProperty);
-	void addTrainFromCtc(const QString metaInfo);
+	void addTrainFromCtc(const QString trainId, const QString trackId);
+	void removeTrainFromCtc(const QString trainId);
+
+	float pid_plant(float);
+	void pid_iterate();
+
+	void plc_iterate();
+
+
 };
 
 /**
@@ -359,8 +386,47 @@ inline QVariant T3Database::getTrainProperty(QString trainId, TrainProperty trai
 	qFatal("T3Database::setTrainProperty() -> cannot find train with ID provided");
 }
 
-inline void T3Database::addTrainFromCtc(const QString metaInfo) {
+inline void T3Database::addTrainFromCtc(const QString trainId, const QString blockId) {
+	QJsonObject trainObject;
+	trainObject.insert(QString("id"), trainId);
+	trainObject.insert(QString("length"), 32.2);
+	trainObject.insert(QString("height"), 3.42);
+	trainObject.insert(QString("width"), 2.65);
+	trainObject.insert(QString("mass"), 40.9e3);
+	trainObject.insert(QString("acceleration"), 0.0);
+	trainObject.insert(QString("velocity"), 0.0);
+	trainObject.insert(QString("crewCount"), 1);
+	trainObject.insert(QString("passangerCount"), 0);
+	trainObject.insert(QString("aircon"), QString(""));
+	trainObject.insert(QString("exteriorLights"), false);
+	trainObject.insert(QString("interiorLights"), false);
+	trainObject.insert(QString("leftDoors"), false);
+	trainObject.insert(QString("rightDoors"), false);
+	trainObject.insert(QString("brakes"), QString(""));
+	trainObject.insert(QString("failures"), QString(""));
+	trainObject.insert(QString("pid_prev_e"), 0.0);
+	trainObject.insert(QString("pid_prev_y"), 0.0);
+	trainObject.insert(QString("pid_sum_e"), 0.0);
+	trainObject.insert(QString("pid_dt"), 1.0);
+	trainObject.insert(QString("pid_r"), 0.0);
+	trainObject.insert(QString("pid_ki"), 0.1);
+	trainObject.insert(QString("pid_kp"), 0.1);
+	trainObject.insert(QString("pid_kd"), 0.1);
+	setTrackProperty(blockId, TrackProperty::TrainOnBlock, trainId);
+	trainObjects.push_front(trainObject);
+	Q_EMIT onTrainObjectsChanged();
+}
 
+inline void T3Database::removeTrainFromCtc(const QString trainId) {
+	for(qsizetype i = 0; i < trainObjects.count(); ++i) {
+		QJsonObject currTrainObject = trainObjects.at(i).toObject();
+		if(currTrainObject.value(QString("id")).toString().trimmed() == trainId.trimmed()) {
+			trainObjects.removeAt(i);
+			Q_EMIT onTrainObjectsChanged();
+			return;
+		}
+	}
+	qFatal("T3Database::removeTrainFromCtc() -> cannot find train id provided.");
 }
 
 inline T3Database::T3Database(QObject * parent) : QObject(parent) {
@@ -372,5 +438,169 @@ inline T3Database::T3Database(QObject * parent) : QObject(parent) {
 	addTrackFromCsv("C:/Users/YIQ25/Documents/Academics/ECE1140/Resources/T3BlueLine.csv");
 }
 
+inline float T3Database::pid_plant(float inp) {
+	return inp;
+}
+
+inline void T3Database::pid_iterate() {
+	for(qsizetype i = 0; i < trainObjects.size(); ++i) {
+		QJsonObject currTrainObject = trainObjects.at(i).toObject();
+
+		//retrieve pid data from train database
+		float r = currTrainObject.value(QString("pid_r")).toDouble();
+		float prev_e = currTrainObject.value(QString("pid_prev_e")).toDouble();
+		float prev_y = currTrainObject.value(QString("pid_prev_y")).toDouble();
+		float sum_e = currTrainObject.value(QString("pid_sum_e")).toDouble();
+		float dt = currTrainObject.value(QString("pid_dt")).toDouble();
+		float kp = currTrainObject.value(QString("pid_kp")).toDouble();
+		float ki = currTrainObject.value(QString("pid_ki")).toDouble();
+		float kd = currTrainObject.value(QString("pid_kd")).toDouble();
+
+		//calculate new values
+		float e = r - prev_y;
+		float P = kp * e;
+		float I = ki * sum_e * dt;
+		float D = kd * (prev_e + e) * dt * 0.5;//trapozoidal integration
+		float u = P + I + D;
+		float y = pid_plant(u);
+
+		//overwrite pid data with new values
+		currTrainObject.insert("pid_prev_y", y);
+		currTrainObject.insert("pid_prev_e", e);
+		currTrainObject.insert("pid_sum_e", sum_e + e);
+
+		trainObjects.replace(i, currTrainObject);
+	}
+	Q_EMIT onTrainObjectsChanged();
+}
+
+inline void T3Database::plc_iterate() {
+	uint32_t inputs = 0;
+	for(qsizetype i = 0; i < trackVariablesObjects.count(); ++i) {
+		QJsonObject currTrackVariablesObject = trackVariablesObjects.at(i).toObject();
+		QJsonObject currTrackConstantsObject = trackConstantsObjects.at(i).toObject().value("blocksMap").toObject();
+		const QStringList blockIds = currTrackVariablesObject.keys();
+		for(qsizetype j = 0; j < blockIds.count(); ++j) {
+			QJsonObject currBlockVariablesObject = currTrackVariablesObject.value(blockIds.at(j)).toObject();
+			QJsonObject currBlockConstantsObject = currTrackConstantsObject.value(blockIds.at(j)).toObject();
+
+			//determine prev2 prev1 next1 next2 blockId
+			bool currSwitch = currBlockVariablesObject.value("switchPosition").toBool();
+			bool currHasCrossing = currBlockConstantsObject.value("crossing").toBool();
+
+			QString currPrev1Block1 = currBlockConstantsObject.value("prevBlock1").toString();
+			QString currPrev1Block2 = currBlockConstantsObject.value("prevBlock2").toString();
+			QString currNext1Block1 = currBlockConstantsObject.value("nextBlock1").toString();
+			QString currNext1Block2 = currBlockConstantsObject.value("nextBlock2").toString();
+
+			QString currPrev1Block
+				= (currNext1Block2 != "" && currNext1Block2 != "PASSIVE" && !currSwitch)
+				  ? currPrev1Block2
+				  : currPrev1Block1;
+			QString currNext1Block
+				= (currPrev1Block2 != "" && currPrev1Block2 != "PASSIVE" && !currSwitch)
+				  ? currNext1Block2
+				  : currNext1Block1;
+
+			//process prev1 block to get prev2
+
+			QJsonObject prev1BlockVariablesObject = currTrackVariablesObject.value(currPrev1Block).toObject();
+			QJsonObject prev1BlockConstantsObject = currTrackConstantsObject.value(currPrev1Block).toObject();
+
+			bool prev1Switch = prev1BlockVariablesObject.value("switchPosition").toBool();
+			bool prev1HasCrossing = prev1BlockConstantsObject.value("crossing").toBool();
+			QString currPrev2Block1 = prev1BlockConstantsObject.value("prevBlock1").toString();
+			QString currPrev2Block2 = prev1BlockConstantsObject.value("prevBlock2").toString();
+
+			QString currPrev2Block
+				= (currPrev2Block2 != "" && currPrev2Block2 != "PASSIVE" && !prev1Switch)
+				  ? currPrev2Block1
+				  : currPrev2Block2;
+
+			//process next1 block to get next2
+
+			QJsonObject next1BlockVariablesObject = currTrackVariablesObject.value(currNext1Block).toObject();
+			QJsonObject next1BlockConstantsObject = currTrackConstantsObject.value(currNext1Block).toObject();
+
+			bool next1Switch = next1BlockVariablesObject.value("switchPosition").toBool();
+			bool next1HasCrossing = next1BlockConstantsObject.value("crossing").toBool();
+			QString currNext2Block1 = next1BlockConstantsObject.value("nextBlock1").toString();
+			QString currNext2Block2 = next1BlockConstantsObject.value("nextBlock2").toString();
+
+			QString currNext2Block
+				= (currNext2Block2 != "" && currNext2Block2 != "PASSIVE" && !next1Switch)
+				  ? currNext2Block1
+				  : currNext2Block2;
+
+			//get occupancy of prev2 prev1 curr next1 next2
+			QJsonObject prev2BlockVariablesObject = currTrackVariablesObject.value(currPrev2Block).toObject();
+			QJsonObject next2BlockVariablesObject = currTrackVariablesObject.value(currNext2Block).toObject();
+
+			bool prev2occupancy = prev2BlockVariablesObject.value("trainOnBlock").toBool();
+			bool prev1occupancy = prev1BlockVariablesObject.value("trainOnBlock").toBool();
+			bool curroccupancy = currBlockVariablesObject.value("trainOnBlock").toBool();
+			bool next1occupancy = next1BlockVariablesObject.value("trainOnBlock").toBool();
+			bool next2occupancy = next2BlockVariablesObject.value("trainOnBlock").toBool();
+
+			QString reversedLight = prev1occupancy ? "stop" : (prev2occupancy ? "approach" : "clear");
+			QString forwardLight = next1occupancy ? "stop" : (next1occupancy ? "approach" : "clear");
+			QString crossing = currHasCrossing
+							   ? ((prev2occupancy || prev1occupancy || curroccupancy || next1occupancy || next2occupancy)
+								  ? "down" : "up")
+							   : "";
+
+			currBlockVariablesObject.insert("forwardLight", forwardLight);
+			currBlockVariablesObject.insert("reversedLight", reversedLight);
+			currBlockVariablesObject.insert("crossingPosition", crossing);
+
+			currTrackVariablesObject.insert(blockIds.at(j), currBlockVariablesObject);
+		}
+		trackVariablesObjects.replace(i, currTrackVariablesObject);
+	}
+	/**
+		 *
+		 * inputs from ctc:
+		 * -> connection[0] -> connection to track model
+		 * -> authority from CTC[1] -> read from db
+		 * -> suggested speed from CTC[2:9] -> read from db
+		 * -> left switch position from CTC[10] -> read from db
+		 * -> right switch position from CTC[11] -> read from db
+
+		 *
+		 * inputs from track model (db):
+		 * -> connection[16] -> connection to track model
+		 * -> prevprev occupancy[17] -> read from db
+		 * -> prev occypancy[18] -> read from db
+		 * -> curr occupancy[19] -> read from db
+		 * -> next occupancy[20] -> read from db
+		 * -> nextnext occupancy[21] -> read from db
+		 * -> temperature from current Track Model[22:29] -> read from db
+		 * -> failure mode[30:31] -> read from db
+		 *
+		 *
+		 * outputs to ctc:
+		 * -> curr occupancy[0] -> read from db -> do nothing
+		 * -> failure mode[1:2] -> read from db -> do nothing
+		 *
+		 * outputs to track model
+		 * -> switch position from CTC[16] -> read from db -> do nothing
+		 * -> light signal to prev[17:18] -> check prev occupancy and prev prev occupancy -> write to db
+		 * -> light signal to next[19:20]-> check next occupancy and next next occupancy -> write to db
+		 * -> crossing[21]  -> check prev occupancy and prev prev occupancy and next occupancy and next next occupancy -> write to db
+		 * -> heater[22] -> check temperature from current track model -> write to db
+		 * -> prev occupancy[23]
+		 * -> next occupancy[24]
+		 *
+		 * outputs to beacon
+		 * -> authority from CTC[4] -> read from db AS LONG AS CONNECTIONS OK -> pass to beacon -> do nothing
+		 * -> commanded speed[5:12] -> read from db AS LONG AS CONNECTIONS OK -> pass to beacon -> do nothing
+		 */
+
+
+
+	QJSEngine jsRuntime;
+
+
+}
 #endif // T3Database_H
 

@@ -72,31 +72,6 @@ Item {
 			opacity: 0.15
 		}
 
-		//		T3Button{
-		//			id:t3bu_timeAndDate
-		//			anchors.right: colu_column.right
-		//			y:T3Styling.margin_r
-		//			width: root.width*0.2
-		//			height: T3Styling.margin_r*2
-		//			buttonLabel_s: Qt.formatDateTime(new Date()
-		//											 , "hh:mm:ss")
-		//		}
-
-		//		T3Button{
-		//			id:t3bu_loadSchedule
-		//			x:t3bu_dispatchNewTrain.x*2+t3bu_dispatchNewTrain.width
-		//			y:t3bu_dispatchNewTrain.y
-		//			width: t3bu_dispatchNewTrain.width
-		//			height: T3Styling.margin_r
-		//			buttonLabel_s: "Load Schedule from File"
-		//		}
-
-		//		T3ParamConfigUnit{
-		//			valueLabel_s: "Automatic Mode"
-		//			width: t3bu_dispatchNewTrain.width
-		//			x:t3bu_loadSchedule.x+t3bu_loadSchedule.width+t3bu_dispatchNewTrain.x
-		//			y:t3bu_dispatchNewTrain.y
-		//		}
 
 		Column{
 			id:colu_column
@@ -318,7 +293,6 @@ Item {
 		}
 		let concatedBlockFlattenedList_A
 			= currBlockFlattenedTopList_A.concat(currBlockFlattenedBottomList_A);
-
 		return concatedBlockFlattenedList_A;
 	}
 }

@@ -2,10 +2,10 @@ import QtQuick 2.12
 
 Item {
 	id:root
-	property bool leftDoorClosed_b: false
-	property bool rightDoorClosed_b: true
+	property bool leftDoorClosed_b: true
+	property bool rightDoorClosed_b: false
 	property bool brakeReleased_b: true
-	property bool brakeEmergency_b: true
+	property bool brakeEmergency_b: false
 	Rectangle{
 		anchors{
 			fill: parent
