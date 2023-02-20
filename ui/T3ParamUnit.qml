@@ -4,7 +4,7 @@ Rectangle {
 	id:root
 	//Modify these as delegate:
 	//[textonly,twostate,labal,unit]
-	property string paramConfig_A: "T_T_Speed_Mph";
+	property string paramConfig_A: "F_T_Speed_Mph";
 	readonly property bool textonly_b:paramConfig_A.split("_")[0]==="T"
 	readonly property bool twoStates_b: paramConfig_A.split("_")[1]==="T"
 	readonly property string valueLabel_s:paramConfig_A.split("_")[2]
@@ -12,8 +12,9 @@ Rectangle {
 	 property real maxValue_r: 1
 	 property real minValue_r: 0
 	property string valueText_s:""
-	 property real valueratio_r: 0.2
+	 property real valueratio_r: 0.0
 	 property int fixedPoint_i:2
+	property bool readOnly_b:true
 	implicitHeight: {
 		if(textonly_b){
 			return T3Styling.fontSubSub_r+2*T3Styling.spacing_r
@@ -177,12 +178,12 @@ Rectangle {
 		anchors.fill: rect_outside
 		hoverEnabled: true
 		onClicked: {
-			if(!twoStates_b) return;
+			if(!twoStates_b||readOnly_b) return;
 			if(valueratio_r<0.5) valueratio_r=1;
 			else valueratio_r = 0;
 		}
 		onPositionChanged: {
-			if(twoStates_b||!pressed) return;
+			if(twoStates_b||!pressed||readOnly_b) return;
 			let rawValRatio_r = 0.0;
 			if(mouse.x<rect_outside.minX_r)
 				rawValRatio_r = 0;

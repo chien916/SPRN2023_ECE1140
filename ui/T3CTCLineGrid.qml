@@ -7,10 +7,11 @@ Item {
 	implicitHeight: 300
 	implicitWidth: 1000
 	property real unitWidth_r:30
-	property variant lineConstantsObject_O: null
-	property variant lineVariablesObject_O: null
+	property variant trackConstantsObject_O: null
+	property variant trackVariablesObject_O: null
+	property int dbIndex_i:-1
 	property variant coordinates_A: []
-	signal blockClicked(blockId:string)
+	signal blockClicked(blockId_s:string)
 	Rectangle{
 		id:rect_canvas
 		property real numberOfUnitWidthNeeded_r: Math.max(...coordinates_A.map(it=>it[1][1]))+1
@@ -44,7 +45,7 @@ Item {
 			id:load_loader
 			anchors.fill: parent
 			sourceComponent: comp_canvas
-			active: root.lineConstantsObject_O&&lineVariablesObject_O&&root.coordinates_A.length>0
+			active: root.trackConstantsObject_O&&trackVariablesObject_O&&root.coordinates_A.length>0
 			//			onLoaded: rect_leftConnectorCanvas.adaptiveMarginCopy_r = item.heightAlias_r*0.05
 		}
 	}
@@ -82,7 +83,7 @@ Item {
 					height: rect_leftConnectorCanvas.adaptiveMarginCopy_r*10
 					width: rect_leftConnectorCanvas.adaptiveMarginCopy_r*2
 					color: "transparent"
-					opacity:lineConstantsObject_O["startingBlock2"]===""?0:1
+					opacity:trackConstantsObject_O["startingBlock2"]===""?0:1
 					Rectangle{
 						y:height
 						width: rect_leftConnectorCanvas.adaptiveMarginCopy_r*1.5
@@ -116,7 +117,7 @@ Item {
 					height: rect_leftConnectorCanvas.adaptiveMarginCopy_r*10
 					width: rect_leftConnectorCanvas.adaptiveMarginCopy_r*2
 					color: "transparent"
-					opacity:lineConstantsObject_O["endingBlock2"]===""?0:1
+					opacity:trackConstantsObject_O["endingBlock2"]===""?0:1
 					Rectangle{
 						x:rect_rightConnectorCanvas.width-width
 						y:height
@@ -160,55 +161,58 @@ Item {
 						T3CTCRailBlock{
 							anchors.fill: parent
 							blockId_s:coordinates_A/*[lineObjIndex_i]*/[index][0]
-							ld_b: {
-								let prevBlock2_s = lineConstantsObject_O["blocksMap"][blockId_s]["prevBlock2"];
-								return prevBlock2_s!==""&&prevBlock2_s!=="PASSIVE"
-							}
-							rd_b: {
-								let nextBlock2_s = lineConstantsObject_O["blocksMap"][blockId_s]["nextBlock2"];
-								return nextBlock2_s!==""&&nextBlock2_s!=="PASSIVE"
-							}
-							stationInfo_s: {
-								let station_sA = lineConstantsObject_O["blocksMap"][blockId_s]["station"].split("_")
-								return station_sA.length===2?station_sA[1]:""
-							}
-							crossingInfo_s:{
-								if(lineConstantsObject_O["blocksMap"][blockId_s]["crossing"])
-									return lineVariablesObject_O[blockId_s]["crossingPosition"]
-								else
-									return ""
-							}
-							color_c: {//probably needs change
-								let failure_b = lineVariablesObject_O[blockId_s]["failure"];
-								let authority_b = lineVariablesObject_O[blockId_s]["authority"];
-								if(failure_b)
-									return T3Styling.cRed_c
-								else{
-									if(authority_b)
-										return T3Styling.cGreen_c
-									else
-										return T3Styling.cYellow_c
-								}
+							blockConstantsObject_O:trackConstantsObject_O[blockId_s]
+							blockVariablesObject_O: trackVariablesObject_O[blockId_s]
+//							ld_b: {
+//								let prevBlock2_s = trackConstantsObject_O["blocksMap"][blockId_s]["prevBlock2"];
+//								return prevBlock2_s!==""&&prevBlock2_s!=="PASSIVE"
+//							}
+//							rd_b: {
+//								let nextBlock2_s = trackConstantsObject_O["blocksMap"][blockId_s]["nextBlock2"];
+//								return nextBlock2_s!==""&&nextBlock2_s!=="PASSIVE"
+//							}
+//							stationInfo_s: {
+//								let station_sA = trackConstantsObject_O["blocksMap"][blockId_s]["station"].split("_")
+//								return station_sA.length===2?station_sA[1]:""
+//							}
+//							crossingInfo_s:{
+//								if(trackConstantsObject_O["blocksMap"][blockId_s]["crossing"])
+//									return trackVariablesObject_O[blockId_s]["crossingPosition"]
+//								else
+//									return ""
+//							}
+//							color_c: {//probably needs change
+//								let failure_b = trackVariablesObject_O[blockId_s]["failure"];
+//								let authority_b = trackVariablesObject_O[blockId_s]["authority"];
+//								if(failure_b)
+//									return T3Styling.cRed_c
+//								else{
+//									if(authority_b)
+//										return T3Styling.cGreen_c
+//									else
+//										return T3Styling.cYellow_c
+//								}
 
-							}
-							isUndg_b: lineConstantsObject_O["blocksMap"][blockId_s]["underground"]
-							fwdInfo_s: {
-								let direction_s = lineConstantsObject_O["blocksMap"][blockId_s]["direction"];
-								if(direction_s==="BIDIRECTIONAL"||direction_s==="FORWARD"){
-									lineVariablesObject_O[blockId_s]["forwardLight"]
-								}else{
-									return ""
-								}
-							}
-							bwdInfo_s: {
-								let direction_s = lineConstantsObject_O["blocksMap"][blockId_s]["direction"];
-								if(direction_s==="BIDIRECTIONAL"||direction_s==="REVERSED"){
-									lineVariablesObject_O[blockId_s]["reversedLight"]
-								}else{
-									return ""
-								}
-							}
-							trainMoveForward_b:!lineVariablesObject_O[blockId_s]["trainOnBlock"].includes("r")
+//							}
+//							isUndg_b: trackConstantsObject_O["blocksMap"][blockId_s]["underground"]
+//							fwdInfo_s: {
+//								let direction_s = trackConstantsObject_O["blocksMap"][blockId_s]["direction"];
+//								if(direction_s==="BIDIRECTIONAL"||direction_s==="FORWARD"){
+//									trackVariablesObject_O[blockId_s]["forwardLight"]
+//								}else{
+//									return ""
+//								}
+//							}
+//							bwdInfo_s: {
+//								let direction_s = trackConstantsObject_O["blocksMap"][blockId_s]["direction"];
+//								if(direction_s==="BIDIRECTIONAL"||direction_s==="REVERSED"){
+//									trackVariablesObject_O[blockId_s]["reversedLight"]
+//								}else{
+//									return ""
+//								}
+//							}
+//							trainInfo_s: trackVariablesObject_O[blockId_s]["trainOnBlock"]
+//							trainMoveForward_b:trackVariablesObject_O[blockId_s]["trainOnBlock"].split("_")[1].includes("F")
 							hovered_b: mAre_railBlock.containsMouse
 							pressed_b: mAre_railBlock.containsPress
 						}

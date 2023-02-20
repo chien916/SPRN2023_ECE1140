@@ -1,50 +1,17 @@
 import QtQuick 2.12
 
-Item {/*
-	signal cancelClicked();
+Item {
 	signal applyClicked();
+	property string blockId_s:"B_A_2"
+	onBlockId_sChanged: {db2view()}
+	property int dbIndex_n:-1
 	readonly property variant configModel_nA:[
 		//[textonly,twostate,labal,unit]
-		["maintain","maintainance mode",true]
-		,["authority","authority",true]
-		,["commandedSpeed","commanded speed",false]
-		,["crossingPosition","switch up",true]
-		,["authority","switch down",true]
-		,["authority","discrete ",true]
-		,["authority","continuous ",false]
-		,["authority","continuous 2",false]
+		"F_T_Maintance Mode_"
+		,"F_T_Authority_"
+		,"F_F_Suggested Speed_mph"
+		,"F_T_Switch Position_"
 	]
-	property variant trackConstantsObject_O : {
-		return {
-			"crossing": false,
-			"direction": "BIDIRECTIONAL",
-			"elevation": 0.25,
-			"grade": 0.5,
-			"length": 50,
-			"nextBlock1": "R_E_15",
-			"nextBlock2": "PASSIVE",
-			"prevBlock1": "R_A_2",
-			"prevBlock2": "",
-			"speedLimit": 40,
-			"station": "",
-			"underground": false
-		}//for testing only
-	}
-
-	property variant trackVariablesObject_O : {
-		return {
-			"authority": false,//changeable -> two-button pair -> switch
-			"commandedSpeed": 0,
-			"crossingPosition": "",
-			"failure": "",
-			"forwardLight": "clear",
-			"heaters": "",
-			"peopleOnStation": 0,
-			"reversedLight": "clear",
-			"switchPosition": false,
-			"trainOnBlock": ""
-		}//for testing only
-	}
 	Rectangle{
 		id:rect_canvas
 		radius: T3Styling.margin_r
@@ -72,17 +39,16 @@ Item {/*
 //			clip: true
 			spacing: T3Styling.spacing_r
 			Repeater{
+				id:reap_repeater
 				model:configModel_nA
-				delegate:		T3ParamConfigUnit{
+				delegate:		T3ParamUnit{
 					height:(rect_canvas.height-T3Styling.margin_r*4
 							-col_column.spacing*(configModel_nA.length-1))/configModel_nA.length
-					valueLabel_s:modelData[1]
-					unitLabel_s:"mph"
-					maxValue_r: 20
-					minValue_r: 10
-					textonly_b:false
-					fixedPoint_i:2
-					twoStates_b: modelData[2]
+					maxValue_r: index===2?100:1
+					minValue_r: 0
+					fixedPoint_i: 2
+					readOnly_b: index===0?false:reap_repeater.itemAt(0).actualValue_r<0.5
+					paramConfig_A:modelData
 					width: col_column.width
 				}
 			}
@@ -97,7 +63,10 @@ Item {/*
 			height: T3Styling.margin_r
 			width: (rect_canvas.width-T3Styling.margin_r*3)/2
 			buttonLabel_s: "APPLY"
-			onButtonClicked: applyClicked()
+			onButtonClicked: {
+				view2db();
+				applyClicked();
+			}
 		}
 
 		T3Button{
@@ -110,11 +79,42 @@ Item {/*
 			height: T3Styling.margin_r
 			width: (rect_canvas.width-T3Styling.margin_r*3)/2
 			buttonLabel_s: "CANCEL"
-			onButtonClicked: cancelClicked()
+			onButtonClicked: applyClicked()
 		}
 	}
 
+//	Timer{
+//		interval:1000
+//		repeat:true
+//		running:true
+//		onTriggered:{
+//		console.log(dataModel_nA)
+//		}
+//	}
+
+	function db2view(){
+		if(!t3databaseQml.trackVariablesObjects_QML||dbIndex_n===-1) return;
+		console.log(t3databaseQml.getTrackProperty(blockId_s,0))
+		reap_repeater.itemAt(0).valueratio_r = t3databaseQml.getTrackProperty(blockId_s,10)?1.0:0.0
+		reap_repeater.itemAt(1).valueratio_r = t3databaseQml.getTrackProperty(blockId_s,1)?1.0:0.0
+		reap_repeater.itemAt(2).valueratio_r
+				= t3databaseQml.getTrackProperty(blockId_s,0)/100
+		reap_repeater.itemAt(3).valueratio_r = t3databaseQml.getTrackProperty(blockId_s,2)?1.0:0.0
+	}
+
+	function view2db(){
+		if(!t3databaseQml.trackVariablesObjects_QML||dbIndex_n===-1) return;
+		t3databaseQml.setTrackProperty(blockId_s,10,reap_repeater.itemAt(0).actualValue_r>0.5);
+		t3databaseQml.setTrackProperty(blockId_s,1,reap_repeater.itemAt(1).actualValue_r>0.5);
+		t3databaseQml.setTrackProperty(blockId_s,0,reap_repeater.itemAt(2).actualValue_r);
+		t3databaseQml.setTrackProperty(blockId_s,2,reap_repeater.itemAt(3).actualValue_r>0.5);
+	}
+
+	//for testing only
+	Component.onCompleted: {
+		db2view();
+	}
 
 	implicitWidth: 250
-	implicitHeight: 500*/
+	implicitHeight: 500
 }

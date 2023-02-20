@@ -7,9 +7,9 @@ Item {
 	implicitWidth: 1000
 	property int lineCount_i:0
 	//	readonly property variant trackDatabase_O:t3database_QML
-	readonly property variant lineConstantsObjects_OA: t3databaseQml.trackConstantsObjects_QML
-	readonly property variant lineVariablesObjects_OA: t3databaseQml.trackVariablesObjects_QML
-	property variant coordinates_nA : lineConstantsObjects_OA.map(it=>solveForCoors_f(it))
+	readonly property variant trackConstantsObjects_OA: t3databaseQml.trackConstantsObjects_QML
+	readonly property variant trackVariablesObjects_OA: t3databaseQml.trackVariablesObjects_QML
+	property variant coordinates_nA : trackConstantsObjects_OA.map(it=>solveForCoors_f(it))
 	property bool configMode_b: false
 	property bool menuMode_b:false
 	Timer{
@@ -28,8 +28,6 @@ Item {
 		}
 		radius: T3Styling.margin_r
 		color: T3Styling.cBgSub_c
-
-
 
 		T3Button{
 			id:t3bu_dispatchNewTrain
@@ -87,15 +85,23 @@ Item {
 			Repeater{
 				model:2
 				delegate:T3CTCLineGrid{
-					lineConstantsObject_O: lineConstantsObjects_OA[index]
-					lineVariablesObject_O: lineVariablesObjects_OA[index]
+					trackConstantsObject_O: trackConstantsObjects_OA[index]["blocksMap"]
+					trackVariablesObject_O: trackVariablesObjects_OA[index]
+					dbIndex_i: index
 					coordinates_A: coordinates_nA[index]
 					height:(root.height-T3Styling.margin_r*6)/2
 					width: colu_column.width
 					onBlockClicked: {
 						//block identifier
-						if(!menuMode_b)
+						if(!menuMode_b){
+							cBloc_configBlock.dbIndex_n = index;
+							cBloc_configBlock.blockId_s = blockId_s
+
+							rBlo_railBlockSelected.blockConstantsObject_O = trackConstantsObject_O[blockId_s]
+							rBlo_railBlockSelected.blockVariablesObject_O = trackVariablesObject_O[blockId_s]
 							configMode_b = true;
+						}
+
 					}
 				}
 			}
@@ -139,6 +145,7 @@ Item {
 
 
 		T3CTCConfigBlock{
+			id:cBloc_configBlock
 			x:configMode_b?root.width*2/3-width/2:root.width+width
 			Behavior on x{ SpringAnimation { spring: 2; damping: 0.2 }}
 			y:rect_railBlockSelected.y
@@ -146,7 +153,7 @@ Item {
 			width: root.width*0.3
 			//			opacity: configMode_b?1:0
 			//			Behavior on opacity {PropertyAnimation{easing.type: Easing.OutCirc}}
-//			onApplyClicked: configMode_b = false
+			onApplyClicked: configMode_b = false
 		}
 
 		T3CTCMainMenu{

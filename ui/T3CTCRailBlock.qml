@@ -1,27 +1,108 @@
 import QtQuick 2.12
 
 Item {
+
+	property variant blockConstantsObject_O:null
+	property variant blockVariablesObject_O:null
+	readonly property bool ready_b : blockConstantsObject_O!==null
+									 &&blockVariablesObject_O!==null
+									 &&blockId_s!=="N_/A_UNSET"
+	 property bool ld_b: {
+		if(!ready_b) return false;
+		let prevBlock2_s = blockConstantsObject_O["prevBlock2"];
+		return prevBlock2_s!==""&&prevBlock2_s!=="PASSIVE"
+	}
+	 property bool rd_b: {
+		if(!ready_b) return false;
+		let nextBlock2_s = blockConstantsObject_O["nextBlock2"];
+		return nextBlock2_s!==""&&nextBlock2_s!=="PASSIVE"
+	}
+	 property string stationInfo_s: {
+		if(!ready_b) return "";
+		let station_sA = blockConstantsObject_O["station"].split("_")
+		return station_sA.length===2?station_sA[1]:""
+	}
+	 property string crossingInfo_s:{
+		if(!ready_b) return "";
+		if(blockConstantsObject_O["crossing"])
+			return blockVariablesObject_O["crossingPosition"]
+		else
+			return ""
+	}
+	 property color color_c: {//probably needs change
+		if(!ready_b) return T3Styling.cRed_c;
+		let failure_b = blockVariablesObject_O["failure"];
+		let authority_b = blockVariablesObject_O["authority"];
+		if(failure_b)
+			return T3Styling.cRed_c
+		else{
+			if(authority_b)
+				return T3Styling.cGreen_c
+			else
+				return T3Styling.cYellow_c
+		}
+
+	}
+	 property bool isUndg_b: {
+		if(!ready_b) return false;
+		return blockConstantsObject_O["underground"];
+	}
+	 property string fwdInfo_s: {
+		if(!ready_b) return "";
+		let direction_s = blockConstantsObject_O["direction"];
+		if(direction_s==="BIDIRECTIONAL"||direction_s==="FORWARD"){
+			blockVariablesObject_O["forwardLight"]
+		}else{
+			return ""
+		}
+	}
+	 property string bwdInfo_s: {
+		if(!ready_b) return "";
+		let direction_s = blockConstantsObject_O["direction"];
+		if(direction_s==="BIDIRECTIONAL"||direction_s==="REVERSED"){
+			blockVariablesObject_O["reversedLight"]
+		}else{
+			return ""
+		}
+	}
+	 property string trainInfo_s: {
+		if(!ready_b) return "";
+		return blockVariablesObject_O["trainOnBlock"];
+	}
+	 property bool trainMoveForward_b:{
+		if(!ready_b) return false;
+		if(trainInfo_s==="") return false;
+		return blockVariablesObject_O["trainOnBlock"].split("_")[1].includes("F")
+	}
+	property bool sUp_b:{
+		if(!ready_b) return false;
+		return blockVariablesObject_O["switchPosition"];
+	}
+	property bool maintainanceMode_b:{
+		if(!ready_b) return false;
+		return blockVariablesObject_O["maintainanceMode"];
+	}
 	//--MODIFYABLES:
 	property bool hovered_b:false
 	property bool pressed_b:false
 	//block identifier
-	property string blockId_s:"B_R_24"
-	//switch information
-	property bool ld_b: false
-	property bool rd_b: true
-	property bool sUp_b: false
-	//block direction information
-	property string fwdInfo_s:"clear"
-	property string bwdInfo_s:"?"
-	//infrastructure information
-	property string stationInfo_s : ""
-	property string crossingInfo_s: ""
-	property bool isUndg_b: false
-	//current train on block infor1mation
-	property string trainInfo_s :"1"
-	property bool trainMoveForward_b: true
-	//current status of block represented by color information
-	property color color_c:T3Styling.cBlue_c
+	property string blockId_s:"G_N_82"
+//	//switch information
+//	property bool ld_b: false
+//	property bool rd_b: true
+//	property bool sUp_b: false
+//	//block direction information
+//	property string fwdInfo_s:"clear"
+//	property string bwdInfo_s:"?"
+//	//infrastructure information
+//	property string stationInfo_s : ""
+//	property string crossingInfo_s: ""
+//	property bool isUndg_b: false
+//	//current train on block infor1mation
+//	property string trainInfo_s :"1"
+//	property bool trainMoveForward_b: true
+//	//current status of block represented by color information
+//	property color color_c:T3Styling.cBlue_c
 	//for styling only -> dont change!
 	readonly property real adaptiveMargin_r :root.height*0.1
 	readonly property real adaptiveFontSize_r: root.height*0.1
@@ -430,12 +511,36 @@ Item {
 					return splittedBlockId_s[0]+splittedBlockId_s[1]+"\n"+splittedBlockId_s[2]
 				}
 				color: root.adaptiveFgSubSub_c
+				SequentialAnimation on color{
+					running: maintainanceMode_b
+					alwaysRunToEnd: true
+					loops: Animation.Infinite
+					PropertyAnimation{
+						from: root.adaptiveFgSubSub_c
+						to: T3Styling.cYellow_c
+						duration: 100
+					}
+					PropertyAnimation{
+						from: T3Styling.cYellow_c
+						to: root.adaptiveFgSubSub_c
+						duration: 500
+					}
+				}
 				font.family: "Inter"
 				font.pixelSize: root.adaptiveFontSize_r*2
 				fontSizeMode: Text.Fit
 				horizontalAlignment: Text.AlignHCenter
 				verticalAlignment: Text.AlignVCenter
 			}
+		}
+	}
+
+	Timer{
+		interval:5000
+		running:true
+		repeat:true
+		onTriggered: {
+			//console.log(rd_b)
 		}
 	}
 
