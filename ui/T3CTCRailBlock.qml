@@ -4,6 +4,7 @@ Item {
 
 	property variant blockConstantsObject_O:null
 	property variant blockVariablesObject_O:null
+	property bool noAnimation_b:false
 	readonly property bool ready_b : blockConstantsObject_O!==null
 									 &&blockVariablesObject_O!==null
 									 &&blockId_s!=="N_/A_UNSET"
@@ -119,12 +120,12 @@ Item {
 		else
 			return T3Styling.cFgSubSub_c
 	}
-	Behavior on adaptiveFgSubSub_c{PropertyAnimation{}}
+	Behavior on adaptiveFgSubSub_c{PropertyAnimation{duration: noAnimation_b?0:500}}
 	//--DO NOT MODIFY ANYTHING FROM HERE
 	id:root
 	Behavior on color_c{PropertyAnimation{
 			easing.type: Easing.InOutQuart
-			duration:  500}
+			duration: noAnimation_b?0:500}
 	}
 
 	Rectangle{
@@ -210,7 +211,7 @@ Item {
 			width:(!root.sUp_b&&root.ld_b)?rect_srBlock.width:rect_trBlock.width
 			Behavior on width {PropertyAnimation {
 					easing.type: Easing.InOutQuad
-					duration:  1000
+					duration: noAnimation_b?0:500
 				}}
 			height: rect_canvas.h_r
 			radius: rect_canvas.h_r
@@ -222,7 +223,9 @@ Item {
 				origin.x:rect_canvas.h_r/2
 				origin.y:rect_canvas.h_r/2
 				angle: ((!sUp_b&&ld_b)?180-rect_canvas.alpha_r:180)
-				Behavior on angle {SpringAnimation { spring: 2; damping: 1 }}
+				Behavior on angle {PropertyAnimation {
+						easing.type: Easing.InOutQuad
+						duration: noAnimation_b?0:500 }}
 			}
 		}
 
@@ -231,7 +234,7 @@ Item {
 			width:(!root.sUp_b&&root.rd_b)?rect_srBlock.width:rect_trBlock.width
 			Behavior on width {PropertyAnimation {
 					easing.type: Easing.InOutQuad
-					duration:  1000
+					duration: noAnimation_b?0:500
 				}}
 			height: rect_canvas.h_r
 			radius: rect_canvas.h_r
@@ -243,7 +246,10 @@ Item {
 				origin.x:rect_canvas.h_r/2
 				origin.y:rect_canvas.h_r/2
 				angle: (!sUp_b&&rd_b)?rect_canvas.alpha_r:0
-				Behavior on angle {SpringAnimation { spring: 2; damping: 1 }}
+				Behavior on angle {PropertyAnimation {
+						easing.type: Easing.InOutQuad
+						duration: noAnimation_b?0:500
+					}}
 			}
 		}
 
@@ -398,10 +404,16 @@ Item {
 						else
 							return T3Styling.cFgSubSub_c
 					}
-					Behavior on color {PropertyAnimation { easing.type: Easing.InOutQuad }}
+					Behavior on color {PropertyAnimation {
+							easing.type: Easing.InOutQuad
+							duration: noAnimation_b?0:500
+						}}
 				}
 				rotation: (!root.sUp_b&&root.ld_b)?-rect_canvas.alpha_r:0
-				Behavior on rotation {SpringAnimation { spring: 2; damping: 1 }}
+				Behavior on rotation {PropertyAnimation {
+						easing.type: Easing.InOutQuad
+						duration: noAnimation_b?0:500
+					}}
 
 			}
 		}
@@ -435,10 +447,16 @@ Item {
 						else
 							return T3Styling.cFgSubSub_c
 					}
-					Behavior on color {PropertyAnimation { easing.type: Easing.InOutQuad }}
+					Behavior on color {PropertyAnimation {
+							easing.type: Easing.InOutQuad
+							duration: noAnimation_b?0:500
+						}}
 				}
 				rotation: (!root.sUp_b&&root.rd_b)?rect_canvas.alpha_r:0
-				Behavior on rotation {SpringAnimation { spring: 2; damping: 1 }}
+				Behavior on rotation {PropertyAnimation {
+						easing.type: Easing.InOutQuad
+						duration: noAnimation_b?0:500
+					}}
 
 			}
 		}
@@ -465,7 +483,10 @@ Item {
 					verticalAlignment: Text.AlignVCenter
 					opacity:(root.crossingInfo_s==="down"||root.crossingInfo_s==="up")?1:0
 					color: T3Styling.cFgSubSub_c
-					Behavior on color {PropertyAnimation { easing.type: Easing.InOutQuad }}
+					Behavior on color {PropertyAnimation {
+							easing.type: Easing.InOutQuad
+							duration: noAnimation_b?0:500
+						}}
 					SequentialAnimation on color{
 						running: root.crossingInfo_s==="down"
 						alwaysRunToEnd: true
@@ -484,7 +505,10 @@ Item {
 
 				}
 				rotation: (!root.sUp_b&&root.ld_b)?-rect_canvas.alpha_r:0
-				Behavior on rotation {SpringAnimation { spring: 2; damping: 1 }}
+				Behavior on rotation {PropertyAnimation {
+						easing.type: Easing.InOutQuad
+						duration: noAnimation_b?0:500
+					}}
 
 			}
 		}

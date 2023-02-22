@@ -94,7 +94,6 @@ Item {
 					height: paintedHeight_r
 				}
 			}
-
 		}
 		Row{
 			id:row_applyCancelButtons
@@ -113,11 +112,5 @@ Item {
 				}
 			}
 		}
-
-
-
-
-
-
 	}
 }

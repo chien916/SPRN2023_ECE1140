@@ -1,10 +1,18 @@
 import QtQuick 2.12
 import QtGraphicalEffects 1.12
 import QtQuick.Dialogs 1.3
-Item {
+import QtQuick.Window 2.12
+
+Window {
 	id:root
-	implicitHeight: 700
-	implicitWidth: 1000
+	flags:Qt.Dialog
+	color: "transparent"
+	width: 1024
+	height: 650
+	maximumHeight: height
+	minimumHeight: height
+	maximumWidth: width
+	minimumWidth: width
 	property int lineCount_i:0
 	//	readonly property variant trackDatabase_O:t3database_QML
 	readonly property variant trackConstantsObjects_OA: t3databaseQml.trackConstantsObjects_QML
@@ -32,9 +40,9 @@ Item {
 		T3Button{
 			id:t3bu_dispatchNewTrain
 			anchors.left: colu_column.left
-			y:T3Styling.margin_r
+			y:T3Styling.spacing_r*2
 			width: root.width*0.3
-			height: T3Styling.margin_r*2
+			height: T3Styling.margin_r
 			buttonLabel_s: "CTC MENU"
 			onButtonClicked: {
 				if(configMode_b) menuMode_b = false
@@ -47,7 +55,7 @@ Item {
 			height: t3bu_dispatchNewTrain.height
 			y:t3bu_dispatchNewTrain.y
 			anchors.right: colu_column.right
-			font.pixelSize: T3Styling.fontMain_r
+			font.pixelSize: T3Styling.fontSub_r
 //			fontSizeMode: Text.Fit
 			horizontalAlignment: Text.AlignHCenter
 			verticalAlignment: Text.AlignVCenter
@@ -60,7 +68,7 @@ Item {
 			height: t3bu_dispatchNewTrain.height
 			y:t3bu_dispatchNewTrain.y
 			anchors.right: colu_column.right
-			font.pixelSize: T3Styling.fontMain_r
+			font.pixelSize: T3Styling.fontSub_r
 //			fontSizeMode: Text.Fit
 			horizontalAlignment: Text.AlignHCenter
 			verticalAlignment: Text.AlignVCenter
@@ -74,9 +82,9 @@ Item {
 		Column{
 			id:colu_column
 			anchors.fill: parent
-			spacing: T3Styling.margin_r
+			spacing: T3Styling.spacing_r*2
 			anchors{
-				topMargin: T3Styling.margin_r*4
+				topMargin: T3Styling.spacing_r*4+T3Styling.margin_r
 				bottomMargin: T3Styling.margin_r
 				leftMargin: T3Styling.margin_r
 				rightMargin: T3Styling.margin_r
@@ -89,7 +97,7 @@ Item {
 					trackVariablesObject_O: trackVariablesObjects_OA[index]
 					dbIndex_i: index
 					coordinates_A: coordinates_nA[index]
-					height:(root.height-T3Styling.margin_r*6)/2
+					height:(root.height-T3Styling.margin_r-T3Styling.spacing_r*8)/2
 					width: colu_column.width
 					onBlockClicked: {
 						//block identifier
@@ -127,7 +135,7 @@ Item {
 		Rectangle{
 			id:rect_railBlockSelected
 			x:configMode_b?root.width*1/3-width/2:-width
-			Behavior on x{ SpringAnimation { spring: 2; damping: 0.2 }}
+			Behavior on x{ PropertyAnimation {easing.type: Easing.InOutCirc }}
 			y:colu_column.y+colu_column.height/2-height/2
 			height: colu_column.height*5/6
 			width: root.width*0.3
@@ -147,7 +155,7 @@ Item {
 		T3CTCConfigBlock{
 			id:cBloc_configBlock
 			x:configMode_b?root.width*2/3-width/2:root.width+width
-			Behavior on x{ SpringAnimation { spring: 2; damping: 0.2 }}
+			Behavior on x{ PropertyAnimation {easing.type: Easing.InOutCirc }}
 			y:rect_railBlockSelected.y
 			height: rect_railBlockSelected.height
 			width: root.width*0.3
@@ -158,7 +166,7 @@ Item {
 
 		T3CTCMainMenu{
 			x:menuMode_b?root.width*1/2-width/2:-width
-			Behavior on x{ SpringAnimation { spring: 2; damping: 0.2 }}
+			Behavior on x{ PropertyAnimation {easing.type: Easing.InOutCirc }}
 			y:rect_railBlockSelected.y
 			height: rect_railBlockSelected.height
 			width: root.width*0.6

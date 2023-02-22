@@ -21,4 +21,6 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
 
 HEADERS += \
-	t3database.hpp
+	t3database.hpp \
+	t3trackhandler.hpp \
+	t3trainhandler.hpp

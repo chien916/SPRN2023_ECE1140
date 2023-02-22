@@ -3,6 +3,8 @@
 
 #include <QtCore>
 #include <QtQml>
+#include "t3trainhandler.hpp"
+#include "t3trackhandler.hpp"
 //#include "t3trackmodel.hpp"
 
 /**
@@ -144,6 +146,10 @@ class T3Database: public QObject {
 	//QString plcProgram = "function(a){return a;}";
 
   public:
+
+	Q_INVOKABLE void pushToFirebase();
+	Q_INVOKABLE void pullFromFirebase();
+
 	Q_INVOKABLE void setTrackProperty(QString blockId, T3Database::TrackProperty trackProperty, QVariant value);
 	Q_INVOKABLE QVariant getTrackProperty(QString blockId, T3Database::TrackProperty trackProperty);
 	Q_INVOKABLE void addTrackFromCsv(const QString filePath);
@@ -152,10 +158,19 @@ class T3Database: public QObject {
 	Q_INVOKABLE void addTrainFromCtc(const QString trainId, const QString trackId, bool moveDirection);
 	Q_INVOKABLE void removeTrainFromCtc(const QString trainId);
 
-	float pid_plant(float);
-	void pid_iterate();
 
-	void plc_iterate();
+
+	float pid_plant(float);
+	void trackIterate();
+	void trainIterate();
+
+	QString getPrevOrNextBlock(QString currBlockId, const QJsonObject * currTrackCon, QJsonObject * currTrackVar
+							   , bool reversedLook, bool * viewReversed);
+
+  private:
+	//FIREBASE RELATED
+	QString firebaseRootUrlString = "https://sprn2023-ece1140-default-rtdb.firebaseio.com/";
+	QNetworkAccessManager networkAccessManager;
 
 
 };
@@ -173,12 +188,12 @@ inline void T3Database::setTrackProperty(QString blockId, T3Database::TrackPrope
 	value.convert(metaData.second);
 	bool fieldIsFound = false;
 	for(qsizetype i = 0; i < trackVariablesObjects.size(); ++i) { //for every line
-		QJsonObject currtrackVariablesObject = trackVariablesObjects[i].toObject();
-		if(currtrackVariablesObject.find(blockId) != currtrackVariablesObject.end()) {
-			QJsonObject currBlockVariablesObject = currtrackVariablesObject[blockId].toObject();
-			currBlockVariablesObject[metaData.first] = value.toJsonValue();
-			currtrackVariablesObject[blockId] = currBlockVariablesObject;
-			trackVariablesObjects[i] = currtrackVariablesObject;
+		QJsonObject currTrackVarObj = trackVariablesObjects[i].toObject();
+		if(currTrackVarObj.find(blockId) != currTrackVarObj.end()) {
+			QJsonObject currBlockVarObj = currTrackVarObj[blockId].toObject();
+			currBlockVarObj[metaData.first] = value.toJsonValue();
+			currTrackVarObj[blockId] = currBlockVarObj;
+			trackVariablesObjects[i] = currTrackVarObj;
 			fieldIsFound = true;
 			break;
 		}
@@ -191,10 +206,10 @@ inline void T3Database::setTrackProperty(QString blockId, T3Database::TrackPrope
 inline QVariant T3Database::getTrackProperty(QString blockId, TrackProperty trackProperty) {
 	QPair<QString, int> metaData = trackPropertiesMetaDataMap.value(trackProperty);
 	for(qsizetype i = 0; i < trackVariablesObjects.size(); ++i) { //for every line
-		QJsonObject currtrackVariablesObject = trackVariablesObjects[i].toObject();
-		if(currtrackVariablesObject.find(blockId) != currtrackVariablesObject.end()) {
-			QJsonObject currBlockVariablesObject = currtrackVariablesObject[blockId].toObject();
-			QVariant valueRequested = currBlockVariablesObject[metaData.first].toVariant();
+		QJsonObject currTrackVarObj = trackVariablesObjects[i].toObject();
+		if(currTrackVarObj.find(blockId) != currTrackVarObj.end()) {
+			QJsonObject currBlockVarObj = currTrackVarObj[blockId].toObject();
+			QVariant valueRequested = currBlockVarObj[metaData.first].toVariant();
 			if(valueRequested.convert(metaData.second)) {
 				//qInfo() << "T3Database::getTrackProperty() -> " << valueRequested;
 				return valueRequested;
@@ -217,8 +232,8 @@ inline void T3Database::addTrackFromCsv(const QString filePath) {
 		qFatal(file.errorString().toUtf8());
 	}
 	QList<QList<QString>> titles;
-	QJsonObject currtrackConstantsObject;
-	QJsonObject currtrackVariablesObject;
+	QJsonObject currTrackConObj;
+	QJsonObject currTrackVarObj;
 	QPair<QString, QString> startingBlock{QString(), QString()};
 	QPair<QString, QString> endingBlock{QString(), QString()};
 	while(!file.atEnd()) {//each iteration is one block (one line in csv)
@@ -245,7 +260,7 @@ inline void T3Database::addTrackFromCsv(const QString filePath) {
 
 		//intializing fields for constants for this block
 		{
-			QJsonObject currBlockConstantsObject;
+			QJsonObject currBlockConObj;
 			for(qsizetype i = 1; i < requiredColumnCount; ++i) {//block id is eliminated at each object
 				QString currType = titles.at(i).at(1);
 				QString currTitle = titles.at(i).at(0);
@@ -260,12 +275,12 @@ inline void T3Database::addTrackFromCsv(const QString filePath) {
 					} else if(currValueAsString.contains("END_B")) {
 						endingBlock.second = currLineSplitted.at(0);
 					}
-					currBlockConstantsObject.insert(currTitle, currValueAsString);
+					currBlockConObj.insert(currTitle, currValueAsString);
 				} else if(currType == "b") {
 					if(currValueAsString == "TRUE")
-						currBlockConstantsObject.insert(currTitle, true);
+						currBlockConObj.insert(currTitle, true);
 					else if(currValueAsString == "FALSE")
-						currBlockConstantsObject.insert(currTitle, false);
+						currBlockConObj.insert(currTitle, false);
 					else
 						qFatal("T3Database::addTrackFromCsv() -> CSV bad format: title stated as boolean but value is not boolean");
 				} else if(currType == "f" || currType == "r") {
@@ -273,46 +288,46 @@ inline void T3Database::addTrackFromCsv(const QString filePath) {
 					float currValue = currValueAsString.toFloat(&conversionIsSucessful);
 					if(!conversionIsSucessful)
 						qFatal("T3Database::addTrackFromCsv() -> CSV bad format: title stated as float but value is not float");
-					currBlockConstantsObject.insert(currTitle, currValue);
+					currBlockConObj.insert(currTitle, currValue);
 				} else if(currType == "i") {
 					bool conversionIsSucessful;
 					int currValue = currValueAsString.toInt(&conversionIsSucessful);
 					if(!conversionIsSucessful)
 						qFatal("T3Database::addTrackFromCsv() -> CSV bad format: title stated as float but value is not float");
-					currBlockConstantsObject.insert(currTitle, currValue);
+					currBlockConObj.insert(currTitle, currValue);
 				} else {
 					qFatal("T3Database::addTrackFromCsv() -> CSV bad format: title type not recognized");
 				}
 			}
-			currtrackConstantsObject.insert(currLineSplitted.at(0), currBlockConstantsObject);
+			currTrackConObj.insert(currLineSplitted.at(0), currBlockConObj);
 		}
 
 		//initializing fields for variables for this block
 		{
-			QJsonObject currBlockVariablesObject;
-			currBlockVariablesObject.insert("commandedSpeed", static_cast<uint16_t>(0));
-			currBlockVariablesObject.insert("authority", true);
-			currBlockVariablesObject.insert("switchPosition", false);
+			QJsonObject currBlockVarObj;
+			currBlockVarObj.insert("commandedSpeed", static_cast<uint16_t>(0));
+			currBlockVarObj.insert("authority", true);
+			currBlockVarObj.insert("switchPosition", false);
 			if(currLineSplitted.at(12).contains("BIDIRECTIONAL")
 					|| currLineSplitted.at(12).contains("FORWARD"))
-				currBlockVariablesObject.insert("forwardLight", QString("clear"));
+				currBlockVarObj.insert("forwardLight", QString("clear"));
 			else
-				currBlockVariablesObject.insert("forwardLight", QString(""));
+				currBlockVarObj.insert("forwardLight", QString(""));
 			if(currLineSplitted.at(12).contains("BIDIRECTIONAL")
 					|| currLineSplitted.at(12).contains("REVERSED"))
-				currBlockVariablesObject.insert("reversedLight", QString("clear"));
+				currBlockVarObj.insert("reversedLight", QString("clear"));
 			else
-				currBlockVariablesObject.insert("reversedLight", QString(""));
+				currBlockVarObj.insert("reversedLight", QString(""));
 			if(currLineSplitted.at(10) == "TRUE")
-				currBlockVariablesObject.insert("crossingPosition", false);
+				currBlockVarObj.insert("crossingPosition", false);
 			else
-				currBlockVariablesObject.insert("crossingPosition", QString(""));
-			currBlockVariablesObject.insert("trainOnBlock", QString(""));
-			currBlockVariablesObject.insert("failure", QString(""));
-			currBlockVariablesObject.insert("heaters", QString(""));
-			currBlockVariablesObject.insert("peopleOnStation", static_cast<float>(0.0));
-			currBlockVariablesObject.insert("maintainanceMode", false);
-			currtrackVariablesObject.insert(currLineSplitted.at(0), currBlockVariablesObject);
+				currBlockVarObj.insert("crossingPosition", QString(""));
+			currBlockVarObj.insert("trainOnBlock", QString(""));
+			currBlockVarObj.insert("failure", QString(""));
+			currBlockVarObj.insert("heaters", QString(""));
+			currBlockVarObj.insert("peopleOnStation", static_cast<float>(0.0));
+			currBlockVarObj.insert("maintainanceMode", false);
+			currTrackVarObj.insert(currLineSplitted.at(0), currBlockVarObj);
 		}
 	}
 	if(startingBlock.first.isEmpty() || endingBlock.first.isEmpty()) {
@@ -321,14 +336,14 @@ inline void T3Database::addTrackFromCsv(const QString filePath) {
 
 	//add a wrapper layer to constants object to include starting and ending block for UI rendering purposes
 	{
-		QJsonObject currtrackConstantsObjectWrapper;
-		currtrackConstantsObjectWrapper.insert("startingBlock1", startingBlock.first);
-		currtrackConstantsObjectWrapper.insert("endingBlock1", endingBlock.first);
-		currtrackConstantsObjectWrapper.insert("startingBlock2", startingBlock.second);
-		currtrackConstantsObjectWrapper.insert("endingBlock2",  endingBlock.second);
-		currtrackConstantsObjectWrapper.insert("blocksMap", currtrackConstantsObject);
-		trackVariablesObjects.push_back(currtrackVariablesObject);
-		trackConstantsObjects.push_back(currtrackConstantsObjectWrapper);
+		QJsonObject currTrackConObjWrapper;
+		currTrackConObjWrapper.insert("startingBlock1", startingBlock.first);
+		currTrackConObjWrapper.insert("endingBlock1", endingBlock.first);
+		currTrackConObjWrapper.insert("startingBlock2", startingBlock.second);
+		currTrackConObjWrapper.insert("endingBlock2",  endingBlock.second);
+		currTrackConObjWrapper.insert("blocksMap", currTrackConObj);
+		trackVariablesObjects.push_back(currTrackVarObj);
+		trackConstantsObjects.push_back(currTrackConObjWrapper);
 	}
 
 	QFile fileToWriteLog(QString(newFilePath).replace(".csv", "_ConstantsJson.json"));
@@ -445,239 +460,132 @@ inline T3Database::T3Database(QObject * parent) : QObject(parent) {
 	//	setTrackProperty("R_A_1", TrackProperty::PeopleOnStation, "1234");
 	addTrackFromCsv("C:/Users/YIQ25/Documents/Academics/ECE1140/Resources/T3GreenLine.csv");
 	addTrackFromCsv("C:/Users/YIQ25/Documents/Academics/ECE1140/Resources/T3BlueLine.csv");
+	pushToFirebase();
 }
 
 inline float T3Database::pid_plant(float inp) {
 	return inp;
 }
 
-inline void T3Database::pid_iterate() {
+inline void T3Database::trainIterate() {
 	for(qsizetype i = 0; i < trainObjects.size(); ++i) {
 		QJsonObject currTrainObject = trainObjects.at(i).toObject();
 
-		//retrieve pid data from train database
-		float r = currTrainObject.value(QString("pid_r")).toDouble();
-		float prev_e = currTrainObject.value(QString("pid_prev_e")).toDouble();
-		float prev_y = currTrainObject.value(QString("pid_prev_y")).toDouble();
-		float sum_e = currTrainObject.value(QString("pid_sum_e")).toDouble();
-		float dt = currTrainObject.value(QString("pid_dt")).toDouble();
-		float kp = currTrainObject.value(QString("pid_kp")).toDouble();
-		float ki = currTrainObject.value(QString("pid_ki")).toDouble();
-		float kd = currTrainObject.value(QString("pid_kd")).toDouble();
 
-		//calculate new values
-		float e = r - prev_y;
-		float P = kp * e;
-		float I = ki * sum_e * dt;
-		float D = kd * (prev_e + e) * dt * 0.5;//trapozoidal integration
-		float u = P + I + D;
-		float y = pid_plant(u);
-
-		//overwrite pid data with new values
-		currTrainObject.insert("velocity", y);
-		currTrainObject.insert("pid_prev_y", y);
-		currTrainObject.insert("pid_prev_e", e);
-		currTrainObject.insert("pid_sum_e", sum_e + e);
 
 		trainObjects.replace(i, currTrainObject);
 	}
 	Q_EMIT onTrainObjectsChanged();
 }
 
-inline void T3Database::plc_iterate() {
+inline QString T3Database::getPrevOrNextBlock(QString currBlockId
+		, const QJsonObject *currTrackCon, QJsonObject *currTrackVar
+		, bool reversedLook, bool *viewReversed) {
+	const QJsonObject currBlockCon = currTrackCon->value(currBlockId).toObject();
+	QJsonObject currBlockVar = currTrackVar->value(currBlockId).toObject();
+	*viewReversed = true;
+	//input is current block pair (constants,variables) and bool indicating if going backward
+	//output is the block pair calculated, either previous or next based on args[1]
+	QVarLengthArray<QString, 2> prevNextBlockIds{QString(), QString()};
+	for(int i = 1; i <= 2; ++i) {
+		QString istr = QString::number(i);
+		prevNextBlockIds.replace(i - 1, currBlockCon.value(reversedLook ? "prevBlock" + istr  : "nextBlock" + istr).toString());
+		if(prevNextBlockIds.at(i - 1).compare(reversedLook ? "END_T" : "START_T") == 0)
+			prevNextBlockIds.replace(i - 1,  currTrackCon->value(reversedLook ? "endingBlock2" : "startingBlock2").toString());
+		else if(prevNextBlockIds.at(i - 1).compare(reversedLook ? "END_B" : "START_B") == 0)
+			prevNextBlockIds.replace(i - 1, currTrackCon->value(reversedLook ? "endingBlock1" : "startingBlock1").toString());
+		else *viewReversed = false;
+	}
+	const bool currSwitchPosition = currBlockVar.value("switchPosition").toBool();
+	QString prevNextBlockId
+		= (prevNextBlockIds.at(1) != "" && prevNextBlockIds.at(1) != "PASSIVE" && !currSwitchPosition)
+		  ? prevNextBlockIds.at(1) : prevNextBlockIds.at(0) ;
+	return prevNextBlockId;
+}
+
+inline void T3Database::pushToFirebase() {
+	const QList<QPair<QString, QJsonArray*>> args{
+		{"trackConstantsObjects", &trackConstantsObjects}
+		, {"trackVariablesObjects", &trackVariablesObjects}
+		, {"trainObjects", &trainObjects}
+	};
+	for(const QPair<QString, QJsonArray*>& arg : args) {
+		QByteArray serializedObj = QJsonDocument(*arg.second).toJson();
+		QNetworkRequest networkRequest(QUrl(firebaseRootUrlString + QString("/%1.json").arg(arg.first)));
+		networkRequest.setHeader(QNetworkRequest::ContentTypeHeader, QString("application/json"));
+		QNetworkReply* networkReply = networkAccessManager.put(networkRequest, serializedObj);
+		if(networkReply->error() != QNetworkReply::NetworkError::NoError)
+			qInfo() << QMetaEnum::fromType<QNetworkReply::NetworkError>().valueToKey(networkReply->error());
+	}
+}
+
+inline void T3Database::pullFromFirebase() {
+	const QList<QPair<QString, QJsonArray*>> args{
+		{"trackConstantsObjects", &trackConstantsObjects}
+		, {"trackVariablesObjects", &trackVariablesObjects}
+		, {"trainObjects", &trainObjects}
+	};
+	for(const QPair<QString, QJsonArray*>& arg : args) {
+		QNetworkRequest networkRequest(QUrl(firebaseRootUrlString + QString("/%1.json").arg(arg.first)));
+		//networkRequest.setHeader(QNetworkRequest::ContentTypeHeader, QString("application/json"));
+		QNetworkReply* networkReply = networkAccessManager.get(networkRequest);
+		if(networkReply->error() != QNetworkReply::NetworkError::NoError)
+			qInfo() << QMetaEnum::fromType<QNetworkReply::NetworkError>().valueToKey(networkReply->error());
+		connect(networkReply, &QNetworkReply::readyRead, [this, networkReply, arg]() {
+			QByteArray serializedObjs = networkReply->readAll();
+			*arg.second = QJsonDocument::fromJson(serializedObjs).array();
+			Q_EMIT onTrackVariablesObjectsChanged();
+		});
+	}
+}
+
+inline void T3Database::trackIterate() {
 
 	for(qsizetype i = 0; i < trackVariablesObjects.count(); ++i) {
-		QJsonObject currTrackVariablesObject = trackVariablesObjects.at(i).toObject();
-		QJsonObject currTrackConstantsObject = trackConstantsObjects.at(i).toObject().value("blocksMap").toObject();
-		QStringList blockIds = currTrackVariablesObject.keys();
+		QJsonObject currTrackVarObj = trackVariablesObjects.at(i).toObject();
+		const QJsonObject currTrackConObj = trackConstantsObjects.at(i).toObject().value("blocksMap").toObject();
+		QStringList blockIds = currTrackVarObj.keys();
 		for(qsizetype j = 0; j < blockIds.count(); ++j) {
-			QJsonObject currBlockVariablesObject = currTrackVariablesObject.value(blockIds.at(j)).toObject();
-			QJsonObject currBlockConstantsObject = currTrackConstantsObject.value(blockIds.at(j)).toObject();
 
-			//----STAGE 1 : PLC PROGRAM EXECUTION
+			//determine prev2 prev1 next1 next2 blockId and object
+			QString currBlockId = blockIds.at(j);
+			const QJsonObject currBlockConObj = currTrackConObj.value(currBlockId).toObject();
+			QJsonObject currBlockVarObj = currTrackVarObj.value(currBlockId).toObject();
 
-			//determine prev2 prev1 next1 next2 blockId
-			bool currSwitch = currBlockVariablesObject.value("switchPosition").toBool();
-			bool currHasCrossing = currBlockConstantsObject.value("crossing").toBool();
-			bool prev1ViewDirectionReverse = true;
-			bool next1ViewDirectionReverse = true;
-			QString currPrev1Block1 = currBlockConstantsObject.value("prevBlock1").toString();
-			if(currPrev1Block1.compare("START_T") == 0)
-				currPrev1Block1 = currTrackConstantsObject.value("startingBlock2").toString();
-			else if(currPrev1Block1.compare("START_B") == 0)
-				currPrev1Block1 = currTrackConstantsObject.value("startingBlock1").toString();
-			else prev1ViewDirectionReverse = false;
+			bool prevViewReversed = false, nextViewReversed = false;
 
-			QString currPrev1Block2 = currBlockConstantsObject.value("prevBlock2").toString();
-			QString currNext1Block1 = currBlockConstantsObject.value("nextBlock1").toString();
-			if(currPrev1Block1.compare("END_T") == 0)
-				currPrev1Block1 = currTrackConstantsObject.value("endingBlock2").toString();
-			else if(currPrev1Block1.compare("END_B") == 0)
-				currPrev1Block1 = currTrackConstantsObject.value("endingBlock1").toString();
-			else next1ViewDirectionReverse = false;
+			QString prev1BlockId
+				= getPrevOrNextBlock(currBlockId, &currTrackConObj, &currTrackVarObj, true != prevViewReversed, &prevViewReversed);
+			QString prev2BlockId
+				= getPrevOrNextBlock(prev1BlockId, &currTrackConObj, &currTrackVarObj, true != prevViewReversed, &prevViewReversed);
+			QString next1BlockId
+				= getPrevOrNextBlock(currBlockId, &currTrackConObj, &currTrackVarObj, true != nextViewReversed, &nextViewReversed);
+			QString next2BlockId
+				= getPrevOrNextBlock(next1BlockId, &currTrackConObj, &currTrackVarObj, true != nextViewReversed, &nextViewReversed);
 
-			QString currNext1Block2 = currBlockConstantsObject.value("nextBlock2").toString();
-			QString currPrev1Block
-				= (currNext1Block2 != "" && currNext1Block2 != "PASSIVE" && !currSwitch)
-				  ? currPrev1Block2
-				  : currPrev1Block1;
-			QString currNext1Block
-				= (currPrev1Block2 != "" && currPrev1Block2 != "PASSIVE" && !currSwitch)
-				  ? currNext1Block2
-				  : currNext1Block1;
+			const QJsonObject prev1BlockConObj = currTrackConObj.value(prev1BlockId).toObject();
+			const QJsonObject prev2BlockConObj = currTrackConObj.value(prev2BlockId).toObject();
+			const QJsonObject next1BlockConObj = currTrackConObj.value(next1BlockId).toObject();
+			const QJsonObject next2BlockConObj = currTrackConObj.value(next2BlockId).toObject();
 
-			//process prev1 block to get prev2
+			QJsonObject prev1BlockVarObj = currTrackVarObj.value(prev1BlockId).toObject();
+			QJsonObject prev2BlockVarObj = currTrackVarObj.value(prev2BlockId).toObject();
+			QJsonObject next1BlockVarObj = currTrackVarObj.value(next1BlockId).toObject();
+			QJsonObject next2BlockVarObj = currTrackVarObj.value(next2BlockId).toObject();
 
-			QJsonObject prev1BlockVariablesObject = currTrackVariablesObject.value(currPrev1Block).toObject();
-			QJsonObject prev1BlockConstantsObject = currTrackConstantsObject.value(currPrev1Block).toObject();
+			QVarLengthArray<QPair<const QJsonObject*, QJsonObject*>, 5> quintupleBlocks = {
+				qMakePair(&prev2BlockConObj, &prev2BlockVarObj)
+				, qMakePair(&prev1BlockConObj, &prev1BlockVarObj)
+				, qMakePair(&currBlockConObj, &currBlockVarObj)
+				, qMakePair(&next1BlockConObj, &next1BlockVarObj)
+				, qMakePair(&next2BlockConObj, &next2BlockVarObj)
+			};
 
-			bool prev1Switch = prev1BlockVariablesObject.value("switchPosition").toBool();
-			QString currPrev2Block1 = prev1BlockConstantsObject.value("prevBlock1").toString();
-			QString currPrev2Block2 = prev1BlockConstantsObject.value("prevBlock2").toString();
-
-			QString currPrev2Block
-				= (currPrev2Block2 != "" && currPrev2Block2 != "PASSIVE" && !prev1Switch)
-				  ? currPrev2Block1
-				  : currPrev2Block2;
-
-			//process next1 block to get next2
-
-			QJsonObject next1BlockVariablesObject = currTrackVariablesObject.value(currNext1Block).toObject();
-			QJsonObject next1BlockConstantsObject = currTrackConstantsObject.value(currNext1Block).toObject();
-
-			bool next1Switch = next1BlockVariablesObject.value("switchPosition").toBool();
-			QString currNext2Block1 = next1BlockConstantsObject.value("nextBlock1").toString();
-			QString currNext2Block2 = next1BlockConstantsObject.value("nextBlock2").toString();
-
-			QString currNext2Block
-				= (currNext2Block2 != "" && currNext2Block2 != "PASSIVE" && !next1Switch)
-				  ? currNext2Block1
-				  : currNext2Block2;
-
-			//get occupancy of prev2 prev1 curr next1 next2
-			QJsonObject prev2BlockVariablesObject = currTrackVariablesObject.value(currPrev2Block).toObject();
-			QJsonObject next2BlockVariablesObject = currTrackVariablesObject.value(currNext2Block).toObject();
-
-			bool prev2occupancy = prev2BlockVariablesObject.value("trainOnBlock").toString().compare("") != 0;
-			bool prev1occupancy = prev1BlockVariablesObject.value("trainOnBlock").toString().compare("") != 0;
-			bool curroccupancy = currBlockVariablesObject.value("trainOnBlock").toString().compare("") != 0;
-			bool next1occupancy = next1BlockVariablesObject.value("trainOnBlock").toString().compare("") != 0;
-			bool next2occupancy = next2BlockVariablesObject.value("trainOnBlock").toString().compare("") != 0;
-
-			QString reversedLight = prev1occupancy ? "stop" : (prev2occupancy ? "approach" : "clear");
-			QString forwardLight = next1occupancy ? "stop" : (next1occupancy ? "approach" : "clear");
-			QString crossing = currHasCrossing
-							   ? ((prev2occupancy || prev1occupancy || curroccupancy || next1occupancy || next2occupancy)
-								  ? "down" : "up")
-							   : "";
-
-			currBlockVariablesObject.insert("forwardLight", forwardLight);
-			currBlockVariablesObject.insert("reversedLight", reversedLight);
-			currBlockVariablesObject.insert("crossingPosition", crossing);
-
-
-			//----STAGE 2 : TRAIN POSITION UPDATE
-
-			//trainOnBlock formats: ID_DIRECTION_PERCENT
-			QStringList trainOnBlock = currBlockVariablesObject.value("trainOnBlock").toString().split("_");
-			Q_ASSERT(trainOnBlock.size() == 3);
-
-			QString trainId = trainOnBlock.at(0);
-			QString trainDirection = trainOnBlock.at(1);
-			bool toFloatConversionStatus = true;
-			float trainTravelledPercent = trainOnBlock.at(2).toFloat(&toFloatConversionStatus);
-			Q_ASSERT(toFloatConversionStatus);
-
-			//iterate per one second
-			float dt = 1 / 60 / 60; //1 second in hours
-			float v = getTrainProperty(trainId, TrainProperty::Velocity).toFloat(&toFloatConversionStatus);
-			Q_ASSERT(toFloatConversionStatus);
-			float ds = dt * v;
-
-			float totalBlockLength = currBlockConstantsObject.value("length").toDouble();
-			float remainingBlockLength = totalBlockLength * trainTravelledPercent;
-			if(remainingBlockLength < ds) {
-				//time to traverse to next block
-
-				//EXTRACTION
-				QString nextOrPrevBlockId =  trainDirection.contains("F")
-											 ? currNext1Block : currPrev1Block;
-				QJsonObject nextOrPrevBlockConstantsObject
-					= currTrackConstantsObject.value(nextOrPrevBlockId).toObject();
-				QJsonObject nextOrPrevBlockVariablesObject
-					= currTrackVariablesObject.value(nextOrPrevBlockId).toObject();
-
-				totalBlockLength = nextOrPrevBlockConstantsObject.value("length").toDouble();
-				float newInitialBlockLength = ds - remainingBlockLength;
-				remainingBlockLength = totalBlockLength - newInitialBlockLength;
-				trainTravelledPercent = 1 - remainingBlockLength / totalBlockLength;
-				if(trainDirection.contains("F")
-						? next1ViewDirectionReverse : prev1ViewDirectionReverse)
-					trainDirection = trainDirection.contains("F") ? "R" : "F";
-				trainOnBlock = QStringList(std::initializer_list<QString>
-				{trainId, trainDirection, QString::number(trainTravelledPercent)});
-
-				//WRITE-BACK
-				currBlockVariablesObject.insert("trainOnBlock", QString(""));
-				nextOrPrevBlockVariablesObject.insert("trainOnBlock", trainOnBlock.join("_"));
-				currTrackVariablesObject.insert(blockIds.at(j), currBlockVariablesObject);
-				currTrackVariablesObject.insert(nextOrPrevBlockId, nextOrPrevBlockVariablesObject);
-
-			} else {
-				//stays on current block
-				remainingBlockLength -= ds;
-				trainTravelledPercent = 1 - remainingBlockLength / totalBlockLength;
-				trainOnBlock = QStringList(std::initializer_list<QString>
-				{trainId, trainDirection, QString::number(trainTravelledPercent)});
-				//WRITE-BACK
-				currBlockVariablesObject.insert("trainOnBlock", trainOnBlock.join("_"));
-				currTrackVariablesObject.insert(blockIds.at(j), currBlockVariablesObject);
-
-			}
-			//---STAGE 3 : TRAIN ATC SYSTEM AUTOMATIC CONTROLS
-			currTrackVariablesObject.insert(blockIds.at(j), currBlockVariablesObject);
+			T3TrackHandler::plcIterate(quintupleBlocks);
+//			//----STAGE 2 : TRAIN POSITION UPDATE
 		}
-		trackVariablesObjects.replace(i, currTrackVariablesObject);
+		trackVariablesObjects.replace(i, currTrackVarObj);
 	}
-
-	/**
-		 *
-		 * inputs from ctc:
-		 * -> connection[0] -> connection to track model
-		 * -> authority from CTC[1] -> read from db
-		 * -> suggested speed from CTC[2:9] -> read from db
-		 * -> left switch position from CTC[10] -> read from db
-		 * -> right switch position from CTC[11] -> read from db
-
-		 *
-		 * inputs from track model (db):
-		 * -> connection[16] -> connection to track model
-		 * -> prevprev occupancy[17] -> read from db
-		 * -> prev occypancy[18] -> read from db
-		 * -> curr occupancy[19] -> read from db
-		 * -> next occupancy[20] -> read from db
-		 * -> nextnext occupancy[21] -> read from db
-		 * -> temperature from current Track Model[22:29] -> read from db
-		 * -> failure mode[30:31] -> read from db
-		 *
-		 *
-		 * outputs to ctc:
-		 * -> curr occupancy[0] -> read from db -> do nothing
-		 * -> failure mode[1:2] -> read from db -> do nothing
-		 *
-		 * outputs to track model
-		 * -> switch position from CTC[16] -> read from db -> do nothing
-		 * -> light signal to prev[17:18] -> check prev occupancy and prev prev occupancy -> write to db
-		 * -> light signal to next[19:20]-> check next occupancy and next next occupancy -> write to db
-		 * -> crossing[21]  -> check prev occupancy and prev prev occupancy and next occupancy and next next occupancy -> write to db
-		 * -> heater[22] -> check temperature from current track model -> write to db
-		 * -> prev occupancy[23]
-		 * -> next occupancy[24]
-		 *
-		 * outputs to beacon
-		 * -> authority from CTC[4] -> read from db AS LONG AS CONNECTIONS OK -> pass to beacon -> do nothing
-		 * -> commanded speed[5:12] -> read from db AS LONG AS CONNECTIONS OK -> pass to beacon -> do nothing
-		 */
 }
 
 #endif // T3Database_H
