@@ -72,12 +72,12 @@ void setup() {
 
 
   
-  buttonDoors.setDebounceTime(50);
-  buttonLights.setDebounceTime(50);
+  buttonDoors.setDebounceTime(100);
+  buttonLights.setDebounceTime(100);
 
-  setSetpoint.setDebounceTime(50);
-  incrSetpoint.setDebounceTime(50);
-  decrSetpoint.setDebounceTime(50);
+  setSetpoint.setDebounceTime(100);
+  incrSetpoint.setDebounceTime(100);
+  decrSetpoint.setDebounceTime(100);
 
 
 }
@@ -131,9 +131,11 @@ void loop() {
       Serial.println("The setting setpoint button is pressed.");
     
     
-      if (setpoint <= speed_limit && setpoint > 0) {
+      if (setpoint <= speed_limit) {
           // communicate that the new setpoint is acceptable and under the speed limit
-          Serial.println("The new setpoint is an acceptable speed, and the commanded speed will be updated.");
+          Serial.print("The new setpoint is an acceptable speed, and the commanded speed will be updated to ");
+          Serial.print(setpoint);
+          Serial.println(" mph.");
           delay(1000);
           digitalWrite(13, HIGH);
           delay(500);
@@ -142,7 +144,9 @@ void loop() {
           commanded_speed = setpoint; 
       }
       else {
-          Serial.println("The new setpoint is not an acceptable speed, it's above the speed limit! The commanded speed will be updated to the speed limit.");
+          Serial.println("The new setpoint is not an acceptable speed, it's above the speed limit! The commanded speed will be updated to the speed limit, which is ");
+          Serial.print(speed_limit);
+          Serial.println(" mph.");
           delay(1000);
           digitalWrite(11, HIGH);
           delay(500);
@@ -306,6 +310,11 @@ void loop() {
   // print speed limit
   Serial.print("The speed limit is ");
   Serial.print(speed_limit);
+  Serial.println("mph");
+
+  // print current setpoint that hasn't been confirmed yet
+  Serial.print("The current unconfirmed stepoint is");
+  Serial.print(setpoint);
   Serial.println("mph");
   
   // print commanded power
