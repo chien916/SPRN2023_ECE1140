@@ -1,5 +1,16 @@
 #include <ezButton.h>
 
+// To calculate the commanded power
+
+float error = 0;
+float errorPrev = 0;
+float derivative = 0;
+float integral = 0;
+float period = 1;
+float uk;
+float ukprev;
+
+
 // Create ezButton objects for different buttons
 
 // For the Train Driver
@@ -39,11 +50,21 @@ ezButton joystick(2);
   
   // define variables for commanded speed and commanded power
   float commanded_speed, commanded_power;
+  float commanded_speed_metric;
 
+  // define variable for maximum power
+  float maximum_power;
 
+  // define variable for actual speed
+  float actual_speed;
+  float actual_speed_metric;
 
   // define variable speed limit
   float speed_limit = 40;
+
+
+  // define variable manual/automatic mode, 0 is manual, 1 is automatic
+  bool mode;
 
   // define Kp and Ki for the engineers to set
   float Kp = 0;
@@ -94,6 +115,8 @@ void loop() {
 
 
 // For the Train Driver
+
+  // Check if button for switching between manual and automatic mode is pressed
 
   // Check if button for increasing setpoint is pressed
   incrSetpoint.loop();
@@ -257,9 +280,9 @@ void loop() {
   
   // send and print out the states of everything, make sure everything is communicated
 
-  Serial.println("Suggested Speed");
-  Serial.println(suggested_speed);
-  Serial.println("mph");
+  Serial.print("Suggested Speed ");
+  Serial.print(suggested_speed);
+  Serial.println(" mph");
 
   // print state of doors
   Serial.print("The doors are ");
@@ -297,46 +320,92 @@ void loop() {
   // print suggested speed
   Serial.print("The suggested speed is ");
   Serial.print(suggested_speed);
-  Serial.println("mph");
+  Serial.println(" mph");
   
 
 
   // print authority
   Serial.print("The authority is ");
   Serial.print(authority);
-  Serial.println("m");
+  Serial.println(" ft");
   
 
   // print speed limit
   Serial.print("The speed limit is ");
   Serial.print(speed_limit);
-  Serial.println("mph");
+  Serial.println(" mph");
 
   // print current setpoint that hasn't been confirmed yet
-  Serial.print("The current unconfirmed stepoint is");
+  Serial.print("The current unconfirmed stepoint is ");
   Serial.print(setpoint);
-  Serial.println("mph");
+  Serial.println(" mph");
+
+
+  // do commanded speed calculation for automatic mode
+  if (mode == 1) {
+    commanded_speed = suggested_speed;  
+  }
+
+  // Calculate the commanded power
+
+  commanded_speed_metric = commanded_speed * 0.44704;
+  actual_speed_metric = actual_speed * 0.44704;
+
+
+  errorPrev = error;
+
+  error = commanded_speed_metric - actual_speed_metric;
+
   
+
+  // Derivative
+  derivative = error * Kp;
+
+  // Integral
+  ukprev = uk; 
+  
+  if (commanded_power < maximum_power)
+    uk = (ukprev + (period/2) * (error+errorPrev));
+  else
+    uk = ukprev;
+  
+  integral = uk * Ki;
+
+  // calculate the updated commanded power
+  commanded_power = derivative + integral;
+  
+
+
+
+
   // print commanded power
   Serial.print("The Commanded Power is ");
   Serial.print(commanded_power);
-  Serial.println("kW");
+  Serial.println(" kW.");
 
   Serial.print("The Commanded Speed is ");
   Serial.print(commanded_speed);
-  Serial.println("mph");
+  Serial.println(" mph.");
+
+  Serial.print("The Actual Speed is ");
+  Serial.print(actual_speed);
+  Serial.println(" mph.");
 
   Serial.print("The Kp is ");
-  Serial.println(Kptrain);
+  Serial.print(Kptrain);
+  Serial.println(".");
+
   Serial.print("The Ki is ");
-  Serial.println(Kitrain);
+  Serial.print(Kitrain);
+  Serial.println(".");
   Serial.println();
 
 
 
   Serial.print("The current station is ");
   // announce the current station
-  Serial.println(currStation);
+  Serial.print(currStation);
+  Serial.println(".");
   }
   
   delay(10);
