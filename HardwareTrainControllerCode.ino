@@ -1,4 +1,9 @@
 #include <ezButton.h>
+#include "ArduPID.h"
+
+unsigned long previousMillis = 0;
+
+const long interval = 5000;
 
 // To calculate the commanded power
 
@@ -31,9 +36,9 @@ ezButton decrSetpoint(3); // button for decreasing the setpoint speed
 ezButton joystick(2);
 
 
-  char *station[10] = {"Carnegie","Bell","Inglewood","Crafton","Ingram","Sheraden","Allegheny","North Side","Gateway Center","Wood Street"};
+  String station[10] = {"Carnegie","Bell","Inglewood","Crafton","Ingram","Sheraden","Allegheny","North Side","Gateway Center","Wood Street"};
   // define variable for current station
-  char *currStation;
+  String currStation;
   
   // define variables for state of doors and lights
   bool doors, interiorLights, exteriorLights;
@@ -51,6 +56,9 @@ ezButton joystick(2);
   // define variables for commanded speed and commanded power
   float commanded_speed, commanded_power;
   float commanded_speed_metric;
+
+  // define variable for final commanded power, after voting
+  float final_commanded_power;
 
   // define variable for maximum power
   float maximum_power;
@@ -107,6 +115,15 @@ int i = 0;
 void loop() {
   // put your main code here, to run repeatedly:
 
+  unsigned long currentMillis = millis();
+
+
+
+
+
+
+
+
   currStation = station[i];
   i++;
   if (i == 9) {
@@ -124,11 +141,9 @@ void loop() {
   if (incrSetpoint.isPressed()) {
     Serial.println("The increasing setpoint button is pressed.");
     setpoint += 5;
-    delay(1000);
     
     Serial.print("The new setpoint is: ");
     Serial.println(setpoint);
-    delay(1000);
   }
 
   // Check if button for decreasing setpoint is pressed
@@ -136,7 +151,7 @@ void loop() {
   
   if (decrSetpoint.isPressed())  {
     Serial.println("The decreasing setpoint button is pressed.");
-    delay(1000);
+  
     if (setpoint >= 5)
       setpoint -= 5;
     else
@@ -144,7 +159,7 @@ void loop() {
 
     Serial.print("The new setpoint is: ");
     Serial.println(setpoint);
-    delay(1000);
+
   }
 
   // Check if button for setting setpoint is pressed
@@ -159,27 +174,21 @@ void loop() {
           Serial.print("The new setpoint is an acceptable speed, and the commanded speed will be updated to ");
           Serial.print(setpoint);
           Serial.println(" mph.");
-          delay(1000);
+         
           digitalWrite(13, HIGH);
-          delay(500);
-          digitalWrite(13, LOW);
-          delay(500);
+          
           commanded_speed = setpoint; 
       }
       else {
           Serial.println("The new setpoint is not an acceptable speed, it's above the speed limit! The commanded speed will be updated to the speed limit, which is ");
           Serial.print(speed_limit);
           Serial.println(" mph.");
-          delay(1000);
           digitalWrite(11, HIGH);
-          delay(500);
-          digitalWrite(11, LOW);
-          delay(500);
           commanded_speed = speed_limit;
         
       }
     
-    }
+  }
     
       
     
@@ -197,7 +206,7 @@ void loop() {
     if (doors == 1)
       Serial.println("Doors are opening.");
 
-      delay(1000);
+     
   }
 
   // Check if Lights on/off button is pressed
@@ -211,7 +220,7 @@ void loop() {
 
     Serial.println("The lights button is pressed");
 
-    delay(1000);
+   
     
   }
     
@@ -278,25 +287,34 @@ void loop() {
 
 
   
-  // send and print out the states of everything, make sure everything is communicated
-
-  Serial.print("Suggested Speed ");
-  Serial.print(suggested_speed);
-  Serial.println(" mph");
-
-  // print state of doors
-  Serial.print("The doors are ");
-  if (doors) {
-    Serial.println("open");
-  }
-  else
-  {
-    Serial.println("closed");  
-  }
 
 
-  // print state of lights
-  Serial.print("The interior lights are ");
+  
+
+  // if the interval of time has passed
+  if (currentMillis - previousMillis >= interval) {
+    previousMillis = currentMillis;
+      
+      
+      // send and print out the states of everything, make sure everything is communicated
+
+    Serial.print("Suggested Speed ");
+    Serial.print(suggested_speed);
+    Serial.println(" mph");
+
+    // print state of doors
+    Serial.print("The doors are ");
+    if (doors) {
+      Serial.println("open");
+    }
+    else
+    {
+      Serial.println("closed");  
+    }
+  
+  
+    // print state of lights
+    Serial.print("The interior lights are ");
 
     if (interiorLights) {
       Serial.println("on");  
@@ -306,7 +324,7 @@ void loop() {
       Serial.println("off");  
     }
 
-  Serial.print("The exterior lights are ");
+    Serial.print("The exterior lights are ");
     if (exteriorLights) {
       Serial.println("on");
       
@@ -316,98 +334,131 @@ void loop() {
     }
 
 
+    // turn lights off
 
-  // print suggested speed
-  Serial.print("The suggested speed is ");
-  Serial.print(suggested_speed);
-  Serial.println(" mph");
+    digitalWrite(13, LOW);
+    digitalWrite(11, LOW);
+    
+    // print suggested speed
+    Serial.print("The suggested speed is ");
+    Serial.print(suggested_speed);
+    Serial.println(" mph");
+    
   
-
-
-  // print authority
-  Serial.print("The authority is ");
-  Serial.print(authority);
-  Serial.println(" ft");
   
+    // print authority
+    Serial.print("The authority is ");
+    Serial.print(authority);
+    Serial.println(" ft");
+    
+  
+    // print speed limit
+    Serial.print("The speed limit is ");
+    Serial.print(speed_limit);
+    Serial.println(" mph");
+  
+    // print current setpoint that hasn't been confirmed yet
+    Serial.print("The current unconfirmed stepoint is ");
+    Serial.print(setpoint);
+    Serial.println(" mph");
+  
+  
+    // do commanded speed calculation for automatic mode
+    if (mode == 1) {
+      commanded_speed = suggested_speed;  
+    }
+  
+    // Calculate the commanded power
 
-  // print speed limit
-  Serial.print("The speed limit is ");
-  Serial.print(speed_limit);
-  Serial.println(" mph");
+    // Redundancy and Variety
+    // voting system, commanded power calculated three ways
 
-  // print current setpoint that hasn't been confirmed yet
-  Serial.print("The current unconfirmed stepoint is ");
-  Serial.print(setpoint);
-  Serial.println(" mph");
+    // Way 1: Using my own code to implement PI controller
+  
+    commanded_speed_metric = commanded_speed * 0.44704;
+    actual_speed_metric = actual_speed * 0.44704;
+  
+  
+    errorPrev = error;
+  
+    error = commanded_speed_metric - actual_speed_metric;
+  
+    
+  
+    // Derivative
+    derivative = error * Kp;
+  
+    // Integral
+    ukprev = uk; 
+    
+    if (commanded_power < maximum_power)
+      uk = (ukprev + (period/2) * (error+errorPrev));
+    else
+      uk = ukprev;
+    
+    integral = uk * Ki;
+  
+    // calculate the updated commanded power
+    commanded_power = derivative + integral;
 
 
-  // do commanded speed calculation for automatic mode
-  if (mode == 1) {
-    commanded_speed = suggested_speed;  
+    // Way 2: Using ArduPID
+    double setpoint = commanded_speed;
+
+    double input;
+
+    double output;
+
+    double p = 1;
+    double i = 0;
+    double d = 0;
+
+
+    // Voting System
+
+    // if they all disagree, use my code
+
+
+    
+    // print commanded power
+    Serial.print("The Commanded Power is ");
+    Serial.print(final_commanded_power);
+    Serial.println(" kW.");
+  
+    // print commanded speed
+    Serial.print("The Commanded Speed is ");
+    Serial.print(commanded_speed);
+    Serial.println(" mph.");
+  
+  
+    // print actual speed
+    Serial.print("The Actual Speed is ");
+    Serial.print(actual_speed);
+    Serial.println(" mph.");
+  
+    // print Kp
+    Serial.print("The Kp is ");
+    Serial.print(Kptrain);
+    Serial.println(".");
+  
+    // print Ki
+    Serial.print("The Ki is ");
+    Serial.print(Kitrain);
+    Serial.println(".");
+    Serial.println();
+  
+    // print current station
+    Serial.print("The current station is ");
+    // announce the current station
+    Serial.print(currStation);
+    Serial.println(".");
+
   }
 
-  // Calculate the commanded power
-
-  commanded_speed_metric = commanded_speed * 0.44704;
-  actual_speed_metric = actual_speed * 0.44704;
-
-
-  errorPrev = error;
-
-  error = commanded_speed_metric - actual_speed_metric;
-
-  
-
-  // Derivative
-  derivative = error * Kp;
-
-  // Integral
-  ukprev = uk; 
-  
-  if (commanded_power < maximum_power)
-    uk = (ukprev + (period/2) * (error+errorPrev));
-  else
-    uk = ukprev;
-  
-  integral = uk * Ki;
-
-  // calculate the updated commanded power
-  commanded_power = derivative + integral;
-  
 
 
 
-
-  // print commanded power
-  Serial.print("The Commanded Power is ");
-  Serial.print(commanded_power);
-  Serial.println(" kW.");
-
-  Serial.print("The Commanded Speed is ");
-  Serial.print(commanded_speed);
-  Serial.println(" mph.");
-
-  Serial.print("The Actual Speed is ");
-  Serial.print(actual_speed);
-  Serial.println(" mph.");
-
-  Serial.print("The Kp is ");
-  Serial.print(Kptrain);
-  Serial.println(".");
-
-  Serial.print("The Ki is ");
-  Serial.print(Kitrain);
-  Serial.println(".");
-  Serial.println();
-
-
-
-  Serial.print("The current station is ");
-  // announce the current station
-  Serial.print(currStation);
-  Serial.println(".");
   }
-  
-  delay(10);
+
 
 }
